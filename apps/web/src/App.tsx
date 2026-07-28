@@ -14,10 +14,13 @@ import type {
 } from "@terra-pulse/earth-domain";
 import {
   AlertTriangle,
+  ArrowRight,
   Bell,
   ChevronDown,
   CircleHelp,
   Database,
+  Layers3,
+  MapPin,
   Menu,
   RefreshCw,
   Search,
@@ -51,6 +54,26 @@ export default function App() {
   const [detail, setDetail] = useState<EventDetailResponse>();
   const [detailLoading, setDetailLoading] = useState(false);
   const [mobileLayersOpen, setMobileLayersOpen] = useState(false);
+  const [showOrientation, setShowOrientation] = useState(false);
+  const [showAlertSummary, setShowAlertSummary] = useState(false);
+
+  useEffect(() => {
+    if (window.localStorage.getItem("terra-pulse:onboarding-v1") !== "complete") {
+      setShowOrientation(true);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!showOrientation && !showAlertSummary) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setShowOrientation(false);
+        setShowAlertSummary(false);
+      }
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [showAlertSummary, showOrientation]);
 
   const load = useCallback(async (refresh = false) => {
     const controller = new AbortController();
@@ -126,6 +149,11 @@ export default function App() {
       } cached`
     : "Connecting";
 
+  const dismissOrientation = () => {
+    window.localStorage.setItem("terra-pulse:onboarding-v1", "complete");
+    setShowOrientation(false);
+  };
+
   return (
     <main className="app-shell">
       <header className="topbar">
@@ -148,14 +176,34 @@ export default function App() {
             type="button"
             className="top-icon-button"
             aria-label="Refresh Earth data"
+            data-tooltip="Refresh live Earth data"
+            title="Refresh live Earth data"
             onClick={() => void load(true)}
           >
             <RefreshCw size={16} className={refreshing ? "is-spinning" : ""} />
           </button>
-          <button type="button" className="top-icon-button" aria-label="Notifications">
+          <button
+            type="button"
+            className={`top-icon-button ${showAlertSummary ? "active" : ""}`}
+            aria-label="View priority alert summary"
+            aria-expanded={showAlertSummary}
+            data-tooltip="View priority alert summary"
+            title="View priority alert summary"
+            onClick={() => setShowAlertSummary((current) => !current)}
+          >
             <Bell size={16} />
           </button>
-          <button type="button" className="top-icon-button" aria-label="About Terra Pulse">
+          <button
+            type="button"
+            className="top-icon-button"
+            aria-label="How to use Terra Pulse"
+            data-tooltip="How to use Terra Pulse"
+            title="How to use Terra Pulse"
+            onClick={() => {
+              setShowAlertSummary(false);
+              setShowOrientation(true);
+            }}
+          >
             <CircleHelp size={16} />
           </button>
           <button
@@ -168,6 +216,110 @@ export default function App() {
           </button>
         </div>
       </header>
+
+      {showAlertSummary ? (
+        <>
+          <button
+            type="button"
+            className="popover-scrim"
+            aria-label="Close priority alert summary"
+            onClick={() => setShowAlertSummary(false)}
+          />
+          <section className="alert-summary-popover" aria-label="Priority alert summary">
+            <div className="popover-heading">
+              <div>
+                <span className="section-kicker">Live alert summary</span>
+                <strong>Signals needing attention</strong>
+              </div>
+              <button
+                type="button"
+                aria-label="Close priority alert summary"
+                onClick={() => setShowAlertSummary(false)}
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="alert-summary-stats">
+              <article>
+                <i className="legend-critical" />
+                <span>Critical</span>
+                <strong>{data?.status.critical ?? "—"}</strong>
+              </article>
+              <article>
+                <i className="legend-high" />
+                <span>High priority</span>
+                <strong>{data?.status.high ?? "—"}</strong>
+              </article>
+            </div>
+            <p>
+              Select a signal in the map or feed to open its evidence brief.
+              Terra Pulse does not send browser push notifications.
+            </p>
+          </section>
+        </>
+      ) : null}
+
+      {showOrientation ? (
+        <div className="orientation-overlay" role="presentation">
+          <section
+            className="orientation-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="orientation-title"
+          >
+            <button
+              type="button"
+              className="orientation-close"
+              aria-label="Close getting started guide"
+              onClick={dismissOrientation}
+            >
+              <X size={16} />
+            </button>
+            <span className="section-kicker">Welcome to Terra Pulse</span>
+            <h2 id="orientation-title">Read the planet in three moves</h2>
+            <p className="orientation-intro">
+              Start with the priority signals. Every claim remains connected to
+              the evidence—and its limitations.
+            </p>
+            <div className="orientation-steps">
+              <article>
+                <span><Layers3 size={17} /></span>
+                <div>
+                  <small>1 · Filter</small>
+                  <strong>Choose observation layers</strong>
+                  <p>Turn event types on or off in the left panel.</p>
+                </div>
+              </article>
+              <article>
+                <span><MapPin size={17} /></span>
+                <div>
+                  <small>2 · Explore</small>
+                  <strong>Select a map signal or feed card</strong>
+                  <p>The same live events appear on the globe and priority feed.</p>
+                </div>
+              </article>
+              <article>
+                <span><ShieldCheck size={17} /></span>
+                <div>
+                  <small>3 · Verify</small>
+                  <strong>Read the brief, then Ask Earth</strong>
+                  <p>Observed, computed, inferred, and unknown facts stay labeled.</p>
+                </div>
+              </article>
+            </div>
+            <button
+              type="button"
+              className="orientation-start"
+              onClick={dismissOrientation}
+            >
+              Start exploring <ArrowRight size={15} />
+            </button>
+            <small className="orientation-reopen">
+              Reopen this guide anytime with the ? icon.
+            </small>
+          </section>
+        </div>
+      ) : null}
 
       {error ? (
         <div className="global-alert" role="alert">

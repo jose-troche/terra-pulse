@@ -261,12 +261,53 @@ test.beforeEach(async ({ page }) => {
   await mockApi(page);
 });
 
-test("renders the live Earth dashboard and filters layers", async ({ page }) => {
+async function openDashboard(page: Page) {
   await page.goto("/");
+  await page.getByRole("button", { name: "Start exploring" }).click();
+}
+
+test("orients first-time users and explains the header actions", async ({ page }) => {
+  await page.goto("/");
+
+  const guide = page.getByRole("dialog", {
+    name: "Read the planet in three moves"
+  });
+  await expect(guide).toBeVisible();
+  await expect(guide.getByText("Choose observation layers")).toBeVisible();
+  await expect(guide.getByText("Select a map signal or feed card")).toBeVisible();
+  await page.getByRole("button", { name: "Start exploring" }).click();
+
+  const notifications = page.getByRole("button", {
+    name: "View priority alert summary"
+  });
+  await expect(notifications).toHaveAttribute(
+    "title",
+    "View priority alert summary"
+  );
+  await notifications.click();
+  await expect(page.getByText("Signals needing attention")).toBeVisible();
+  await expect(page.getByText("Terra Pulse does not send browser push notifications.")).toBeVisible();
+  await page
+    .getByRole("button", { name: "Close priority alert summary" })
+    .last()
+    .click();
+
+  const help = page.getByRole("button", { name: "How to use Terra Pulse" });
+  await expect(help).toHaveAttribute("title", "How to use Terra Pulse");
+  await help.click();
+  await expect(guide).toBeVisible();
+});
+
+test("renders the live Earth dashboard and filters layers", async ({ page }) => {
+  await openDashboard(page);
 
   await expect(
     page.getByRole("heading", { name: /What is happening/ })
   ).toBeVisible();
+  await expect(page.locator(".map-signal-count")).toContainText(
+    "3 signals plotted",
+    { timeout: 15_000 }
+  );
   await expect(page.getByText("M 7.1 - near Sendai, Japan")).toBeVisible();
   await expect(page.getByText("Northwest Territories Wildfires")).toBeVisible();
   await expect(page.getByText("Active signals").first()).toBeVisible();
@@ -282,7 +323,7 @@ test("renders the live Earth dashboard and filters layers", async ({ page }) => 
 test("opens a signal brief and exposes evidence, timeline, and Ask Earth", async ({
   page
 }) => {
-  await page.goto("/");
+  await openDashboard(page);
   await page.getByText("M 7.1 - near Sendai, Japan").click();
 
   await expect(page.getByTestId("event-detail")).toBeVisible();
@@ -304,8 +345,31 @@ test("opens a signal brief and exposes evidence, timeline, and Ask Earth", async
   await expect(page.getByText(/current packet shows one critical earthquake/)).toBeVisible();
 });
 
+test("returns from an Ask Earth answer to the example questions", async ({
+  page
+}) => {
+  await openDashboard(page);
+  const menu = page.getByRole("button", { name: "Open layer controls" });
+  if (await menu.isVisible()) await menu.click();
+
+  await page
+    .getByRole("button", { name: "What is happening around the world today?" })
+    .click();
+  await expect(
+    page.getByText(/current packet shows one critical earthquake/)
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Back to example questions" })
+    .click();
+  await expect(
+    page.getByRole("button", {
+      name: "Which areas show elevated wildfire risk?"
+    })
+  ).toBeVisible();
+});
+
 test("keeps the mobile dashboard within the viewport", async ({ page }) => {
-  await page.goto("/");
+  await openDashboard(page);
   await expect(page.getByTestId("earth-map")).toBeVisible();
   const viewport = page.viewportSize();
   const bodyWidth = await page.evaluate(() => document.documentElement.scrollWidth);

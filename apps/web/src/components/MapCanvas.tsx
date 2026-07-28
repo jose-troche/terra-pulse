@@ -7,12 +7,15 @@ import {
   type GeoJSONSource,
   type MapLayerMouseEvent,
   type Map as MapLibreMap,
+  setWorkerUrl,
   type StyleSpecification
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { EarthEvent, EventType } from "@terra-pulse/earth-domain";
 import { Focus, Globe2, Map as MapIcon, Minus, Plus } from "lucide-react";
 import { eventColors } from "../lib/format";
+
+setWorkerUrl("/maplibre-gl-worker.mjs");
 
 interface MapCanvasProps {
   events: EarthEvent[];
@@ -76,6 +79,29 @@ const colorExpression: ExpressionSpecification = [
   "#d5eadf"
 ];
 
+const toEventFeatureCollection = (events: EarthEvent[]) => ({
+  type: "FeatureCollection" as const,
+  features: events.map((event) => ({
+    type: "Feature" as const,
+    geometry: {
+      type: "Point" as const,
+      coordinates: [
+        event.coordinates.longitude,
+        event.coordinates.latitude
+      ]
+    },
+    properties: {
+      id: event.id,
+      type: event.type,
+      title: event.title,
+      riskScore: event.riskScore
+    }
+  }))
+});
+
+const eventPacketKey = (events: EarthEvent[]) =>
+  events.map((event) => `${event.id}:${event.updatedAt}`).join("|");
+
 export function MapCanvas({
   events,
   activeTypes,
@@ -85,8 +111,12 @@ export function MapCanvas({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
   const onSelectRef = useRef(onSelect);
+  const hasAutoFocusedRef = useRef(false);
+  const lastAppliedPacketRef = useRef("");
+  const visibleEventsRef = useRef<EarthEvent[]>([]);
   const [projection, setProjection] = useState<"globe" | "mercator">("globe");
   const [mapError, setMapError] = useState(false);
+  const [signalsReady, setSignalsReady] = useState(false);
 
   onSelectRef.current = onSelect;
 
@@ -94,6 +124,7 @@ export function MapCanvas({
     () => events.filter((event) => activeTypes.has(event.type)),
     [activeTypes, events]
   );
+  visibleEventsRef.current = visibleEvents;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -115,10 +146,13 @@ export function MapCanvas({
         "bottom-right"
       );
       map.on("load", () => {
+        const initialEvents = visibleEventsRef.current;
+        setSignalsReady(false);
         map.addSource("earth-events", {
           type: "geojson",
-          data: { type: "FeatureCollection", features: [] }
+          data: toEventFeatureCollection(initialEvents)
         });
+        lastAppliedPacketRef.current = eventPacketKey(initialEvents);
         map.addLayer({
           id: "event-halo",
           type: "circle",
@@ -129,13 +163,35 @@ export function MapCanvas({
               ["linear"],
               ["get", "riskScore"],
               0,
-              8,
+              12,
               100,
-              24
+              32
+            ],
+            "circle-color": colorExpression,
+            "circle-opacity": 0.28,
+            "circle-blur": 0.42
+          }
+        });
+        map.addLayer({
+          id: "event-priority-ring",
+          type: "circle",
+          source: "earth-events",
+          filter: [">=", ["get", "riskScore"], 65],
+          paint: {
+            "circle-radius": [
+              "interpolate",
+              ["linear"],
+              ["get", "riskScore"],
+              65,
+              10,
+              100,
+              18
             ],
             "circle-color": colorExpression,
             "circle-opacity": 0.12,
-            "circle-blur": 0.55
+            "circle-stroke-color": colorExpression,
+            "circle-stroke-opacity": 0.82,
+            "circle-stroke-width": 1.5
           }
         });
         map.addLayer({
@@ -148,19 +204,19 @@ export function MapCanvas({
               ["linear"],
               ["get", "riskScore"],
               0,
-              4,
+              5.5,
               100,
-              9
+              11
             ],
             "circle-color": colorExpression,
-            "circle-stroke-color": "rgba(255,255,255,.9)",
+            "circle-stroke-color": "rgba(239,255,248,.95)",
             "circle-stroke-width": [
               "case",
               ["==", ["get", "id"], selectedId ?? ""],
-              2.5,
-              0.8
+              3,
+              1.4
             ],
-            "circle-opacity": 0.94
+            "circle-opacity": 1
           }
         });
         map.on("mouseenter", "event-points", () => {
@@ -173,6 +229,14 @@ export function MapCanvas({
           const id = event.features?.[0]?.properties?.id;
           if (typeof id === "string") onSelectRef.current(id);
         });
+      });
+      map.on("sourcedata", (event) => {
+        if (
+          event.sourceId === "earth-events" &&
+          map.isSourceLoaded("earth-events")
+        ) {
+          setSignalsReady(true);
+        }
       });
       map.on("error", (event: ErrorEvent) => {
         if (String(event.error?.message ?? "").toLowerCase().includes("webgl")) {
@@ -196,32 +260,37 @@ export function MapCanvas({
     if (!map) return;
     const update = () => {
       const source = map.getSource("earth-events") as GeoJSONSource | undefined;
-      source?.setData({
-        type: "FeatureCollection",
-        features: visibleEvents.map((event) => ({
-          type: "Feature",
-          geometry: {
-            type: "Point",
-            coordinates: [
-              event.coordinates.longitude,
-              event.coordinates.latitude
-            ]
-          },
-          properties: {
-            id: event.id,
-            type: event.type,
-            title: event.title,
-            riskScore: event.riskScore
-          }
-        }))
-      });
+      const packetKey = eventPacketKey(visibleEvents);
+      if (source && packetKey !== lastAppliedPacketRef.current) {
+        setSignalsReady(false);
+        source.setData(toEventFeatureCollection(visibleEvents));
+        lastAppliedPacketRef.current = packetKey;
+      }
       if (map.getLayer("event-points")) {
         map.setPaintProperty("event-points", "circle-stroke-width", [
           "case",
           ["==", ["get", "id"], selectedId ?? ""],
-          2.5,
-          0.8
+          3,
+          1.4
         ]);
+      }
+      map.triggerRepaint();
+      if (!hasAutoFocusedRef.current && visibleEvents.length > 0) {
+        const priorityEvent = [...visibleEvents].sort(
+          (left, right) => right.riskScore - left.riskScore
+        ).at(0);
+        if (priorityEvent) {
+          hasAutoFocusedRef.current = true;
+          map.flyTo({
+            center: [
+              priorityEvent.coordinates.longitude,
+              priorityEvent.coordinates.latitude
+            ],
+            zoom: 2.15,
+            duration: 1100,
+            essential: true
+          });
+        }
       }
     };
     if (map.isStyleLoaded()) update();
@@ -247,9 +316,17 @@ export function MapCanvas({
   };
 
   const recenter = () => {
+    const priorityEvent = [...visibleEvents].sort(
+      (left, right) => right.riskScore - left.riskScore
+    ).at(0);
     mapRef.current?.flyTo({
-      center: [8, 18],
-      zoom: 1.45,
+      center: priorityEvent
+        ? [
+            priorityEvent.coordinates.longitude,
+            priorityEvent.coordinates.latitude
+          ]
+        : [8, 18],
+      zoom: priorityEvent ? 2.15 : 1.45,
       bearing: 0,
       pitch: 0,
       duration: 900,
@@ -298,6 +375,17 @@ export function MapCanvas({
       </div>
       <div className="map-coordinate-label" aria-hidden="true">
         LIVE EARTH OBSERVATION · 3D
+      </div>
+      <div className="map-signal-count" aria-live="polite">
+        <span className="live-indicator" />
+        {visibleEvents.length > 0 ? (
+          <>
+            <strong>{visibleEvents.length}</strong>{" "}
+            {signalsReady ? "signals plotted" : "signals plotting…"}
+          </>
+        ) : (
+          "No observation layers selected"
+        )}
       </div>
     </div>
   );

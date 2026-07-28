@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import type { AskEarthResponse } from "@terra-pulse/earth-domain";
-import { ArrowUp, Bot, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowUp, Bot, Sparkles } from "lucide-react";
 import { askEarth } from "../lib/api";
 
 interface AskEarthProps {
@@ -51,6 +51,12 @@ export function AskEarth({ eventId, compact = false }: AskEarthProps) {
     void submit(question);
   };
 
+  const resetQuestion = () => {
+    setAnswer(undefined);
+    setError(undefined);
+    setQuestion("");
+  };
+
   return (
     <section className={`ask-earth ${compact ? "ask-earth-compact" : ""}`}>
       <div className="ask-heading">
@@ -84,6 +90,16 @@ export function AskEarth({ eventId, compact = false }: AskEarthProps) {
           </div>
           <p>{answer.answer}</p>
           <small>{answer.limitations[0]}</small>
+          {!compact ? (
+            <button
+              type="button"
+              className="ask-another-button"
+              onClick={resetQuestion}
+            >
+              <ArrowLeft size={12} />
+              Back to example questions
+            </button>
+          ) : null}
         </div>
       ) : null}
       {error ? (
