@@ -1,0 +1,59 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "terrapulse",
+  "main": "apps/worker/src/index.ts",
+  "compatibility_date": "2026-07-28",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./apps/web/dist",
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"]
+  },
+  "ai": {
+    "binding": "AI"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "terrapulse-db",
+      "database_id": "5aa7bc37-ec02-4105-9c39-a3f5dd3b37f6",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "EARTH_CACHE",
+      "id": "33e0379c8cb644f581b102c1d7666d61"
+    }
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "EARTH_SESSIONS",
+        "class_name": "EarthSession"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["EarthSession"]
+    }
+  ],
+  "triggers": {
+    "crons": ["*/15 * * * *"]
+  },
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 0.1,
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  },
+  "vars": {
+    "APP_ENV": "production",
+    "AI_MODEL": "@cf/meta/llama-3.1-8b-instruct-fast"
+  }
+}

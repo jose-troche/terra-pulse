@@ -1,0 +1,12 @@
+node_modules/
+dist/
+apps/*/dist/
+.wrangler/
+.dev.vars
+.env
+.DS_Store
+playwright-report/
+test-results/
+coverage/
+*.log
+apps/worker/src/worker-configuration.d.ts
