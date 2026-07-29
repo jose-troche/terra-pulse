@@ -37,11 +37,11 @@ const mapStyle: StyleSpecification = {
     osm: {
       type: "raster",
       tiles: [
-        "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
       ],
       tileSize: 256,
       attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · © <a href="https://carto.com/attributions">CARTO</a>'
     }
   },
   layers: [
@@ -55,10 +55,10 @@ const mapStyle: StyleSpecification = {
       type: "raster",
       source: "osm",
       paint: {
-        "raster-saturation": -0.58,
-        "raster-contrast": 0.3,
-        "raster-brightness-min": 0.06,
-        "raster-brightness-max": 0.56,
+        "raster-saturation": -0.25,
+        "raster-contrast": 0.12,
+        "raster-brightness-min": 0.1,
+        "raster-brightness-max": 0.82,
         "raster-opacity": 0.95
       }
     }
@@ -85,6 +85,18 @@ const colorExpression: ExpressionSpecification = [
   "#d5eadf"
 ];
 
+const riskColorExpression: ExpressionSpecification = [
+  "match",
+  ["get", "riskLevel"],
+  "critical",
+  "#ff6b56",
+  "high",
+  "#f4ad57",
+  "moderate",
+  "#71c7c0",
+  "#6f8980"
+];
+
 const toEventFeatureCollection = (events: EarthEvent[]) => ({
   type: "FeatureCollection" as const,
   features: events.map((event) => ({
@@ -100,7 +112,8 @@ const toEventFeatureCollection = (events: EarthEvent[]) => ({
       id: event.id,
       type: event.type,
       title: event.title,
-      riskScore: event.riskScore
+      riskScore: event.riskScore,
+      riskLevel: event.riskLevel
     }
   }))
 });
@@ -151,6 +164,7 @@ export function MapCanvas({
   const [mapError, setMapError] = useState(false);
   const [signalsReady, setSignalsReady] = useState(false);
   const [iconsReady, setIconsReady] = useState(false);
+  const [severityDotsReady, setSeverityDotsReady] = useState(false);
 
   onSelectRef.current = onSelect;
 
@@ -292,7 +306,21 @@ export function MapCanvas({
                 "icon-ignore-placement": true
               }
             });
+            map.addLayer({
+              id: "event-severity-dots",
+              type: "circle",
+              source: "earth-events",
+              paint: {
+                "circle-radius": 3.5,
+                "circle-color": riskColorExpression,
+                "circle-stroke-color": "#07130f",
+                "circle-stroke-width": 1.5,
+                "circle-translate": [0, -12],
+                "circle-translate-anchor": "viewport"
+              }
+            });
             setIconsReady(true);
+            setSeverityDotsReady(true);
           })
           .catch((error: unknown) => {
             console.warn(
@@ -438,6 +466,8 @@ export function MapCanvas({
       className="map-shell"
       data-starting-view={viewerLocation ? "viewer" : "priority"}
       data-event-icons={iconsReady ? "ready" : "loading"}
+      data-severity-dots={severityDotsReady ? "ready" : "loading"}
+      data-basemap-language="en"
     >
       <div ref={containerRef} className="map-canvas" data-testid="earth-map" />
       <div className="map-vignette" aria-hidden="true" />
@@ -478,7 +508,13 @@ export function MapCanvas({
         {visibleEvents.length > 0 ? (
           <>
             <strong>{visibleEvents.length}</strong>{" "}
-            {signalsReady ? "signals plotted" : "signals plotting…"}
+            {signalsReady
+              ? visibleEvents.length === 1
+                ? "signal plotted"
+                : "signals plotted"
+              : visibleEvents.length === 1
+                ? "signal plotting…"
+                : "signals plotting…"}
           </>
         ) : (
           "No observation layers selected"

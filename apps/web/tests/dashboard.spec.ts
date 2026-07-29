@@ -395,6 +395,15 @@ test("renders the live Earth dashboard and filters layers", async ({ page }) => 
     "ready",
     { timeout: 15_000 }
   );
+  await expect(page.locator(".map-shell")).toHaveAttribute(
+    "data-severity-dots",
+    "ready",
+    { timeout: 15_000 }
+  );
+  await expect(page.locator(".map-shell")).toHaveAttribute(
+    "data-basemap-language",
+    "en"
+  );
   await expect(page.locator(".map-coordinate-label")).toContainText(
     "STARTING NEAR San Francisco, California · APPROXIMATE"
   );
@@ -408,6 +417,43 @@ test("renders the live Earth dashboard and filters layers", async ({ page }) => 
   await page.getByText("Wildfires", { exact: true }).click();
   await expect(page.getByText("Northwest Territories Wildfires")).toBeHidden();
   await expect(page.getByText("M 7.1 - near Sendai, Japan")).toBeVisible();
+});
+
+test("filters the map and feed from the critical and high totals", async ({
+  page
+}) => {
+  await openDashboard(page);
+  const menu = page.getByRole("button", { name: "Open layer controls" });
+  if (await menu.isVisible()) await menu.click();
+
+  await page.getByRole("button", { name: "Show critical events" }).click();
+  await expect(page.getByRole("heading", { name: "Critical signals" })).toBeVisible();
+  await expect(page.locator(".event-card")).toHaveCount(1);
+  await expect(page.getByText("M 7.1 - near Sendai, Japan")).toBeVisible();
+  await expect(page.getByText("Northwest Territories Wildfires")).toBeHidden();
+  await expect(page.locator(".map-signal-count")).toContainText(
+    "1 signal plotted",
+    { timeout: 15_000 }
+  );
+
+  await page.getByRole("button", { name: "Clear filter" }).click();
+  await expect(page.locator(".event-card")).toHaveCount(3);
+  await expect(page.locator(".map-signal-count")).toContainText(
+    "3 signals plotted",
+    { timeout: 15_000 }
+  );
+
+  if (await menu.isVisible()) await menu.click();
+  await page
+    .getByRole("button", { name: "Show high priority events" })
+    .click();
+  await expect(page.getByRole("heading", { name: "High signals" })).toBeVisible();
+  await expect(page.locator(".event-card")).toHaveCount(2);
+  await expect(page.getByText("M 7.1 - near Sendai, Japan")).toBeHidden();
+  await expect(page.locator(".map-signal-count")).toContainText(
+    "2 signals plotted",
+    { timeout: 15_000 }
+  );
 });
 
 test("opens a signal brief and exposes evidence, timeline, and Ask Earth", async ({
@@ -431,6 +477,21 @@ test("opens a signal brief and exposes evidence, timeline, and Ask Earth", async
 
   const askInput = page.getByPlaceholder("Ask about this event…");
   await askInput.fill("What is known?");
+  await askInput.press("Enter");
+  await expect(page.getByText(/current packet shows one critical earthquake/)).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Ask another question" })
+  ).toBeVisible();
+  await page
+    .getByRole("button", { name: "Close Ask Earth response" })
+    .click();
+  await expect(
+    page.getByText(/current packet shows one critical earthquake/)
+  ).toBeHidden();
+  await expect(askInput).toBeFocused();
+  await expect(askInput).toHaveValue("");
+
+  await askInput.fill("What changed?");
   await askInput.press("Enter");
   await expect(page.getByText(/current packet shows one critical earthquake/)).toBeVisible();
 });

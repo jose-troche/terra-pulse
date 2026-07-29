@@ -584,9 +584,11 @@ a {
   display: grid;
   place-content: center;
   justify-items: center;
+  padding: 0;
   border: 1px solid rgba(255, 107, 86, 0.45);
   border-radius: 50%;
   background: radial-gradient(circle, rgba(255, 107, 86, 0.09), transparent 65%);
+  color: inherit;
 }
 
 .score-orbit::before,
@@ -630,7 +632,8 @@ a {
   margin-top: 18px;
 }
 
-.overview-stats article {
+.overview-stats article,
+.overview-stats .priority-stat {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -639,6 +642,39 @@ a {
   border: 1px solid var(--line);
   border-radius: 6px;
   background: rgba(125, 174, 151, 0.025);
+}
+
+.priority-filter-control {
+  transition:
+    140ms border-color,
+    140ms background,
+    140ms box-shadow,
+    140ms transform;
+}
+
+.priority-filter-control:hover {
+  transform: translateY(-1px);
+  border-color: rgba(244, 173, 87, 0.4);
+  background: rgba(244, 173, 87, 0.07);
+}
+
+.score-orbit.priority-filter-control:hover,
+.score-orbit.priority-filter-control.active {
+  border-color: rgba(255, 107, 86, 0.8);
+  background: radial-gradient(circle, rgba(255, 107, 86, 0.18), transparent 68%);
+  box-shadow: 0 0 20px rgba(255, 107, 86, 0.12);
+}
+
+.overview-stats .priority-stat {
+  width: 100%;
+  color: inherit;
+  text-align: left;
+}
+
+.overview-stats .priority-stat.active {
+  border-color: rgba(244, 173, 87, 0.52);
+  background: rgba(244, 173, 87, 0.09);
+  box-shadow: 0 0 16px rgba(244, 173, 87, 0.07);
 }
 
 .status-dot {
@@ -658,7 +694,8 @@ a {
   box-shadow: 0 0 8px rgba(101, 226, 178, 0.4);
 }
 
-.overview-stats article div {
+.overview-stats article div,
+.overview-stats .priority-stat div {
   min-width: 0;
   display: flex;
   flex-direction: column;
@@ -926,6 +963,25 @@ a {
   color: #6d827a;
   font-size: 10px;
   font-style: normal;
+}
+
+.ask-answer-close {
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: #6f8980;
+}
+
+.ask-answer-close:hover {
+  border-color: rgba(169, 215, 194, 0.14);
+  background: rgba(160, 206, 184, 0.05);
+  color: #c9ddd3;
 }
 
 .ask-answer p {
@@ -1307,7 +1363,13 @@ a {
   letter-spacing: -0.5px;
 }
 
-.feed-header > span {
+.feed-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.feed-header-actions > span {
   min-width: 28px;
   padding: 4px 6px;
   border-radius: 10px;
@@ -1315,6 +1377,20 @@ a {
   color: #70cda9;
   font-size: 13px;
   text-align: center;
+}
+
+.feed-filter-clear {
+  padding: 4px 7px;
+  border: 1px solid rgba(169, 215, 194, 0.12);
+  border-radius: 5px;
+  background: rgba(160, 206, 184, 0.04);
+  color: #79a291;
+  font-size: 11px;
+}
+
+.feed-filter-clear:hover {
+  border-color: rgba(101, 226, 178, 0.28);
+  color: var(--mint);
 }
 
 .feed-search {

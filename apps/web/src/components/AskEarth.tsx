@@ -1,6 +1,6 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import type { AskEarthResponse } from "@terra-pulse/earth-domain";
-import { ArrowLeft, ArrowUp, Bot, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowUp, Bot, Sparkles, X } from "lucide-react";
 import { askEarth } from "../lib/api";
 
 interface AskEarthProps {
@@ -20,6 +20,7 @@ export function AskEarth({ eventId, compact = false }: AskEarthProps) {
   const [answer, setAnswer] = useState<AskEarthResponse>();
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const submit = async (value: string) => {
     const next = value.trim();
@@ -55,6 +56,8 @@ export function AskEarth({ eventId, compact = false }: AskEarthProps) {
     setAnswer(undefined);
     setError(undefined);
     setQuestion("");
+    setSessionId(undefined);
+    window.requestAnimationFrame(() => inputRef.current?.focus());
   };
 
   return (
@@ -87,19 +90,26 @@ export function AskEarth({ eventId, compact = false }: AskEarthProps) {
             <Bot size={13} />
             <span>{answer.generatedBy === "workers-ai" ? "AI explained" : "Rules explained"}</span>
             <i>{answer.classification}</i>
+            <button
+              type="button"
+              className="ask-answer-close"
+              aria-label="Close Ask Earth response"
+              title="Close response"
+              onClick={resetQuestion}
+            >
+              <X size={13} />
+            </button>
           </div>
           <p>{answer.answer}</p>
           <small>{answer.limitations[0]}</small>
-          {!compact ? (
-            <button
-              type="button"
-              className="ask-another-button"
-              onClick={resetQuestion}
-            >
-              <ArrowLeft size={12} />
-              Back to example questions
-            </button>
-          ) : null}
+          <button
+            type="button"
+            className="ask-another-button"
+            onClick={resetQuestion}
+          >
+            <ArrowLeft size={12} />
+            {compact ? "Ask another question" : "Back to example questions"}
+          </button>
         </div>
       ) : null}
       {error ? (
@@ -112,6 +122,7 @@ export function AskEarth({ eventId, compact = false }: AskEarthProps) {
           Ask a question about Earth events
         </label>
         <input
+          ref={inputRef}
           id={`ask-earth-${eventId ?? "global"}`}
           value={question}
           onChange={(event) => setQuestion(event.target.value)}

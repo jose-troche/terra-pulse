@@ -10,7 +10,8 @@ import type {
   EarthEvent,
   EventDetailResponse,
   EventListResponse,
-  EventType
+  EventType,
+  RiskLevel
 } from "@terra-pulse/earth-domain";
 import {
   AlertTriangle,
@@ -40,6 +41,7 @@ const MapCanvas = lazy(async () => {
 });
 
 const allEventTypes = Object.keys(eventLabels) as EventType[];
+type PriorityFilter = Extract<RiskLevel, "critical" | "high">;
 
 export default function App() {
   const [data, setData] = useState<EventListResponse>();
@@ -50,6 +52,7 @@ export default function App() {
   const [activeTypes, setActiveTypes] = useState<Set<EventType>>(
     () => new Set(allEventTypes)
   );
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>();
   const [selectedId, setSelectedId] = useState<string>();
   const [detail, setDetail] = useState<EventDetailResponse>();
   const [detailLoading, setDetailLoading] = useState(false);
@@ -123,16 +126,24 @@ export default function App() {
     setDetail(undefined);
   };
 
+  const priorityEvents = useMemo(
+    () =>
+      (data?.events ?? []).filter(
+        (event) => !priorityFilter || event.riskLevel === priorityFilter
+      ),
+    [data?.events, priorityFilter]
+  );
+
   const visibleEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return (data?.events ?? []).filter(
+    return priorityEvents.filter(
       (event) =>
         activeTypes.has(event.type) &&
         (!query ||
           event.title.toLowerCase().includes(query) ||
           event.location.toLowerCase().includes(query))
     );
-  }, [activeTypes, data?.events, search]);
+  }, [activeTypes, priorityEvents, search]);
 
   const toggleType = (type: EventType) => {
     setActiveTypes((current) => {
@@ -141,6 +152,19 @@ export default function App() {
       else next.add(type);
       return next;
     });
+  };
+
+  const togglePriorityFilter = (level: PriorityFilter) => {
+    setPriorityFilter((current) => (current === level ? undefined : level));
+    setActiveTypes(new Set(allEventTypes));
+    setSearch("");
+    setSelectedId(undefined);
+    setDetail(undefined);
+    setMobileLayersOpen(false);
+  };
+
+  const clearPriorityFilter = () => {
+    setPriorityFilter(undefined);
   };
 
   const sourceSummary = data
@@ -343,19 +367,43 @@ export default function App() {
                 <span>Active signals</span>
                 <strong>{loading ? "—" : data?.status.totalActive ?? 0}</strong>
               </div>
-              <div className="score-orbit" aria-hidden="true">
+              <button
+                type="button"
+                className={`score-orbit priority-filter-control ${
+                  priorityFilter === "critical" ? "active" : ""
+                }`}
+                aria-label={
+                  priorityFilter === "critical"
+                    ? "Clear critical event filter"
+                    : "Show critical events"
+                }
+                aria-pressed={priorityFilter === "critical"}
+                onClick={() => togglePriorityFilter("critical")}
+              >
                 <span>{data?.status.critical ?? 0}</span>
                 <small>critical</small>
-              </div>
+              </button>
             </div>
             <div className="overview-stats">
-              <article>
+              <button
+                type="button"
+                className={`priority-stat priority-filter-control ${
+                  priorityFilter === "high" ? "active" : ""
+                }`}
+                aria-label={
+                  priorityFilter === "high"
+                    ? "Clear high priority event filter"
+                    : "Show high priority events"
+                }
+                aria-pressed={priorityFilter === "high"}
+                onClick={() => togglePriorityFilter("high")}
+              >
                 <span className="status-dot status-high" />
                 <div>
                   <small>High priority</small>
                   <strong>{data?.status.high ?? 0}</strong>
                 </div>
-              </article>
+              </button>
               <article>
                 <span className="status-dot status-stable" />
                 <div>
@@ -445,7 +493,7 @@ export default function App() {
             }
           >
             <MapCanvas
-              events={data?.events ?? []}
+              events={priorityEvents}
               activeTypes={activeTypes}
               selectedId={selectedId}
               viewerLocation={data?.viewerLocation}
@@ -477,10 +525,29 @@ export default function App() {
             <>
               <div className="feed-header">
                 <div>
-                  <span className="section-kicker">Intelligence feed</span>
-                  <h2>Priority signals</h2>
+                  <span className="section-kicker">
+                    {priorityFilter
+                      ? `${priorityFilter} priority filter`
+                      : "Intelligence feed"}
+                  </span>
+                  <h2>
+                    {priorityFilter
+                      ? `${priorityFilter === "critical" ? "Critical" : "High"} signals`
+                      : "Priority signals"}
+                  </h2>
                 </div>
-                <span>{visibleEvents.length}</span>
+                <div className="feed-header-actions">
+                  {priorityFilter ? (
+                    <button
+                      type="button"
+                      className="feed-filter-clear"
+                      onClick={clearPriorityFilter}
+                    >
+                      Clear filter
+                    </button>
+                  ) : null}
+                  <span>{visibleEvents.length}</span>
+                </div>
               </div>
               <div className="feed-search">
                 <Search size={14} />
