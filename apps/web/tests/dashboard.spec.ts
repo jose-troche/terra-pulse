@@ -276,6 +276,44 @@ test.beforeEach(async ({ page }) => {
   await mockApi(page);
 });
 
+test("publishes the Terra Pulse favicon and install icons", async ({
+  page
+}) => {
+  await page.goto("/");
+
+  await expect(
+    page.locator('link[rel="icon"][href="/favicon.svg"]')
+  ).toHaveAttribute("sizes", "any");
+  await expect(
+    page.locator('link[rel="apple-touch-icon"]')
+  ).toHaveAttribute("href", "/apple-touch-icon.png");
+  await expect(page.locator('link[rel="manifest"]')).toHaveAttribute(
+    "href",
+    "/site.webmanifest"
+  );
+
+  const [svg, ico, appleTouch, manifest] = await Promise.all([
+    page.request.get("/favicon.svg"),
+    page.request.get("/favicon.ico"),
+    page.request.get("/apple-touch-icon.png"),
+    page.request.get("/site.webmanifest")
+  ]);
+  expect(svg.ok()).toBe(true);
+  expect(ico.ok()).toBe(true);
+  expect(appleTouch.ok()).toBe(true);
+  expect(manifest.ok()).toBe(true);
+  expect(await svg.text()).toContain('viewBox="0 0 64 64"');
+  expect((await ico.body()).byteLength).toBeGreaterThan(500);
+  expect((await appleTouch.body()).byteLength).toBeGreaterThan(1_000);
+  await expect(manifest.json()).resolves.toMatchObject({
+    short_name: "TerraPulse",
+    icons: [
+      { src: "/icon-192.png", sizes: "192x192" },
+      { src: "/icon-512.png", sizes: "512x512" }
+    ]
+  });
+});
+
 async function openDashboard(page: Page) {
   await page.goto("/");
   await page.getByRole("button", { name: "Start exploring" }).click();
@@ -482,4 +520,36 @@ test("keeps the mobile dashboard within the viewport", async ({ page }) => {
     await menu.click();
     await expect(page.getByText("Observation layers")).toBeVisible();
   }
+});
+
+test("renders the event relationship graph in the mobile page flow", async ({
+  page
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "mobile-chromium",
+    "This regression covers the phone layout."
+  );
+
+  await openDashboard(page);
+  await page.locator(".event-card").first().click();
+  await expect(page.getByTestId("event-detail")).toBeVisible();
+  await page.getByRole("button", { name: "connections" }).click();
+
+  const graph = page.locator(".knowledge-graph");
+  await graph.scrollIntoViewIfNeeded();
+  await expect(graph).toBeInViewport();
+  await expect(graph.locator(".graph-node")).toHaveCount(3);
+  await expect(graph.locator(".graph-edge")).toHaveCount(2);
+  await expect(graph.locator("svg")).toBeVisible();
+  await expect(page.locator(".detail-scroll")).toHaveCSS(
+    "overflow-y",
+    "visible"
+  );
+
+  const viewportWidth = page.viewportSize()?.width ?? 0;
+  const bounds = await graph.boundingBox();
+  expect(bounds?.width ?? 0).toBeGreaterThan(250);
+  expect((bounds?.x ?? 0) + (bounds?.width ?? 0)).toBeLessThanOrEqual(
+    viewportWidth
+  );
 });

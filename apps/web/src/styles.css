@@ -2305,11 +2305,13 @@ a {
   }
 
   .detail-panel {
-    min-height: 680px;
+    min-height: 0;
   }
 
   .detail-scroll {
+    flex: 0 0 auto;
     max-height: none;
+    overflow-y: visible;
   }
 
   .map-title {
@@ -2388,7 +2390,7 @@ a {
   }
 
   .detail-panel {
-    min-height: 720px;
+    min-height: 0;
   }
 
   .detail-header h2 {
