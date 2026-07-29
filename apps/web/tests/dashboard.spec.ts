@@ -281,6 +281,31 @@ async function openDashboard(page: Page) {
   await page.getByRole("button", { name: "Start exploring" }).click();
 }
 
+async function smallestVisibleFontSize(
+  page: Page,
+  rootSelector = "body"
+): Promise<number> {
+  return page.locator(rootSelector).evaluate((root) => {
+    let smallest = Number.POSITIVE_INFINITY;
+    for (const element of root.querySelectorAll("*")) {
+      const style = window.getComputedStyle(element);
+      const bounds = element.getBoundingClientRect();
+      const text = element.textContent?.trim();
+      if (
+        !text ||
+        style.display === "none" ||
+        style.visibility === "hidden" ||
+        bounds.width <= 0 ||
+        bounds.height <= 0
+      ) {
+        continue;
+      }
+      smallest = Math.min(smallest, Number.parseFloat(style.fontSize));
+    }
+    return smallest;
+  });
+}
+
 test("orients first-time users and explains the header actions", async ({ page }) => {
   await page.goto("/");
 
@@ -407,6 +432,42 @@ test("uses computed clustering for regional wildfire risk", async ({ page }) => 
     .click();
   await expect(page.getByText(/deterministic 350 km geographic clustering/)).toBeVisible();
   await expect(page.getByText(/not a forecast/)).toBeVisible();
+});
+
+test("keeps dashboard intelligence and reports legible", async ({ page }) => {
+  test.setTimeout(60_000);
+  await openDashboard(page);
+  await expect(page.locator(".map-signal-count")).toContainText(
+    "3 signals plotted",
+    { timeout: 15_000 }
+  );
+  expect(await smallestVisibleFontSize(page)).toBeGreaterThanOrEqual(10);
+
+  const menu = page.getByRole("button", { name: "Open layer controls" });
+  if (await menu.isVisible()) await menu.click();
+  const regionalQuestion = page.getByRole("button", {
+    name: "Which areas show elevated wildfire risk?"
+  });
+  await expect(regionalQuestion).toHaveCSS("font-size", "12px");
+  await regionalQuestion.click();
+  await expect(page.locator(".ask-answer p")).toHaveCSS("font-size", "13px");
+  if (await menu.isVisible()) await menu.click();
+
+  await page.locator(".event-card").first().click();
+  await expect(page.getByTestId("event-detail")).toBeVisible();
+  await expect(page.locator(".brief-section > p").first()).toHaveCSS(
+    "font-size",
+    "13px"
+  );
+  expect(
+    await smallestVisibleFontSize(page, "[data-testid='event-detail']")
+  ).toBeGreaterThanOrEqual(10);
+
+  await page.getByRole("button", { name: "connections" }).click();
+  await expect(page.locator(".knowledge-graph text").first()).toHaveCSS(
+    "font-size",
+    "10px"
+  );
 });
 
 test("keeps the mobile dashboard within the viewport", async ({ page }) => {

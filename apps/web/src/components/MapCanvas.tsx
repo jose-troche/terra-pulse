@@ -263,6 +263,7 @@ export function MapCanvas({
             "circle-opacity": 1
           }
         });
+        setSignalsReady(true);
         void registerEventIcons(map)
           .then(() => {
             if (!map.getSource("earth-events") || map.getLayer("event-icons")) {
@@ -311,14 +312,6 @@ export function MapCanvas({
           if (typeof id === "string") onSelectRef.current(id);
         });
       });
-      map.on("sourcedata", (event) => {
-        if (
-          event.sourceId === "earth-events" &&
-          map.isSourceLoaded("earth-events")
-        ) {
-          setSignalsReady(true);
-        }
-      });
       map.on("error", (event: ErrorEvent) => {
         if (String(event.error?.message ?? "").toLowerCase().includes("webgl")) {
           setMapError(true);
@@ -346,6 +339,7 @@ export function MapCanvas({
         setSignalsReady(false);
         source.setData(toEventFeatureCollection(visibleEvents));
         lastAppliedPacketRef.current = packetKey;
+        setSignalsReady(true);
       }
       if (map.getLayer("event-points")) {
         map.setPaintProperty("event-points", "circle-stroke-width", [

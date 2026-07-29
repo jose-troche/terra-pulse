@@ -128,7 +128,7 @@ a {
   padding-left: 12px;
   border-left: 1px solid var(--line-strong);
   color: #668279;
-  font-size: 8px;
+  font-size: 12px;
   font-style: normal;
   font-weight: 700;
   letter-spacing: 1.7px;
@@ -139,7 +139,7 @@ a {
   align-items: center;
   gap: 8px;
   color: #819b91;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.35px;
   text-transform: uppercase;
@@ -155,7 +155,7 @@ a {
 
 .system-status small {
   color: #506a61;
-  font-size: 9px;
+  font-size: 11px;
   text-transform: none;
 }
 
@@ -217,7 +217,7 @@ a {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34);
   color: #c9ddd3;
   content: attr(data-tooltip);
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.25;
   opacity: 0;
   pointer-events: none;
@@ -324,7 +324,7 @@ a {
 
 .alert-summary-stats span {
   color: #839b91;
-  font-size: 8px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 
@@ -336,7 +336,7 @@ a {
 .alert-summary-popover > p {
   margin: 12px 0 0;
   color: #6f887e;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.5;
 }
 
@@ -382,7 +382,7 @@ a {
   max-width: 520px;
   margin: 12px 0 20px;
   color: #8da79c;
-  font-size: 11px;
+  font-size: 13px;
   line-height: 1.6;
 }
 
@@ -418,7 +418,7 @@ a {
 
 .orientation-steps small {
   color: #5a9981;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.5px;
   text-transform: uppercase;
@@ -427,14 +427,14 @@ a {
 .orientation-steps strong {
   margin-top: 6px;
   color: #cbded5;
-  font-size: 10px;
+  font-size: 12px;
   line-height: 1.35;
 }
 
 .orientation-steps p {
   margin: 6px 0 0;
   color: #647d73;
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -450,7 +450,7 @@ a {
   border-radius: 8px;
   background: var(--mint);
   color: #06251a;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 750;
 }
 
@@ -462,7 +462,7 @@ a {
   display: block;
   margin-top: 9px;
   color: #526b61;
-  font-size: 8px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -529,7 +529,7 @@ a {
 
 .section-kicker {
   color: #769086;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 1.35px;
   text-transform: uppercase;
@@ -546,7 +546,7 @@ a {
   border-radius: 3px;
   background: rgba(101, 226, 178, 0.08);
   color: #69d8ad;
-  font-size: 7px;
+  font-size: 10px;
   font-style: normal;
   letter-spacing: 1px;
 }
@@ -565,7 +565,7 @@ a {
 
 .earth-score > div:first-child span {
   color: #8aa096;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .earth-score > div:first-child strong {
@@ -618,7 +618,7 @@ a {
   z-index: 1;
   margin-top: 3px;
   color: #9b6d63;
-  font-size: 7px;
+  font-size: 13px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
 }
@@ -666,7 +666,7 @@ a {
 
 .overview-stats small {
   color: #687e76;
-  font-size: 8px;
+  font-size: 12px;
   white-space: nowrap;
 }
 
@@ -674,7 +674,7 @@ a {
   margin-top: 2px;
   overflow: hidden;
   color: #c4d6cd;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 580;
   text-overflow: ellipsis;
   text-transform: capitalize;
@@ -695,7 +695,7 @@ a {
 
 .rail-heading > span {
   color: #71887f;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 700;
   letter-spacing: 1.15px;
   text-transform: uppercase;
@@ -706,7 +706,7 @@ a {
   border: 0;
   background: transparent;
   color: #5f9f87;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .layer-list {
@@ -725,7 +725,7 @@ a {
   border-radius: 6px;
   color: #71877e;
   cursor: pointer;
-  font-size: 11px;
+  font-size: 13px;
   transition:
     140ms background,
     140ms border-color,
@@ -771,7 +771,7 @@ a {
   border-radius: 8px;
   background: rgba(180, 214, 197, 0.05);
   color: #637a71;
-  font-size: 8px;
+  font-size: 12px;
   font-weight: 600;
   text-align: center;
 }
@@ -815,14 +815,14 @@ a {
 
 .ask-heading strong {
   color: #d3e4dc;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 650;
 }
 
 .ask-heading small {
   margin-top: 2px;
   color: #5f7b70;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .ask-suggestions {
@@ -837,7 +837,7 @@ a {
   border-radius: 5px;
   background: rgba(160, 206, 184, 0.025);
   color: #7f9990;
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1.35;
   text-align: left;
 }
@@ -862,7 +862,7 @@ a {
   outline: 0;
   background: rgba(3, 12, 9, 0.45);
   color: #cfe0d8;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .ask-earth input::placeholder {
@@ -900,7 +900,7 @@ a {
 .ask-disclaimer {
   margin: 6px 0 0;
   color: #465e55;
-  font-size: 7px;
+  font-size: 11px;
   text-align: center;
 }
 
@@ -917,27 +917,27 @@ a {
   align-items: center;
   gap: 5px;
   color: #72b99e;
-  font-size: 8px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 
 .ask-answer-meta i {
   margin-left: auto;
   color: #6d827a;
-  font-size: 7px;
+  font-size: 10px;
   font-style: normal;
 }
 
 .ask-answer p {
   margin: 7px 0 5px;
   color: #b7cbc1;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
 .ask-answer > small {
   color: #596f67;
-  font-size: 7px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -950,7 +950,7 @@ a {
   border: 0;
   background: transparent;
   color: #79bba1;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .ask-another-button:hover {
@@ -960,7 +960,7 @@ a {
 .ask-error {
   margin: 8px 0 0;
   color: #eaa472;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .button-spinner {
@@ -983,7 +983,7 @@ a {
   align-items: center;
   gap: 7px;
   color: #8dab9f;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 650;
   text-transform: uppercase;
 }
@@ -995,7 +995,7 @@ a {
 .source-integrity p {
   margin: 7px 0;
   color: #526860;
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -1007,7 +1007,7 @@ a {
   border: 0;
   background: transparent;
   color: #658a7c;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .globe-stage {
@@ -1057,7 +1057,7 @@ a {
   background: rgba(4, 16, 13, 0.58);
   backdrop-filter: blur(9px);
   color: #779188;
-  font-size: 8px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 
@@ -1162,7 +1162,7 @@ a {
   z-index: 1300;
   color: rgba(151, 187, 170, 0.5);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 7px;
+  font-size: 13px;
   letter-spacing: 1.3px;
   pointer-events: none;
 }
@@ -1180,14 +1180,14 @@ a {
   border-radius: 6px;
   background: rgba(5, 18, 14, 0.72);
   color: #789087;
-  font-size: 8px;
+  font-size: 12px;
   pointer-events: none;
   backdrop-filter: blur(8px);
 }
 
 .map-signal-count strong {
   color: #cce0d6;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .map-signal-count .live-indicator {
@@ -1222,7 +1222,7 @@ a {
 }
 
 .map-loading strong {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 540;
 }
 
@@ -1236,7 +1236,7 @@ a {
 }
 
 .map-unavailable span {
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .map-bottom-status {
@@ -1255,7 +1255,7 @@ a {
   align-items: center;
   gap: 5px;
   color: #597168;
-  font-size: 8px;
+  font-size: 12px;
 }
 
 .map-bottom-status svg {
@@ -1272,7 +1272,7 @@ a {
   border-radius: 5px 0 0 0 !important;
   background: rgba(5, 17, 14, 0.74) !important;
   color: #6c847a !important;
-  font-size: 8px !important;
+  font-size: 10px !important;
 }
 
 .maplibregl-ctrl-attrib a {
@@ -1313,7 +1313,7 @@ a {
   border-radius: 10px;
   background: rgba(101, 226, 178, 0.08);
   color: #70cda9;
-  font-size: 9px;
+  font-size: 13px;
   text-align: center;
 }
 
@@ -1338,7 +1338,7 @@ a {
   outline: 0;
   background: rgba(117, 166, 143, 0.025);
   color: #c8dad1;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .feed-search input:focus {
@@ -1422,7 +1422,7 @@ a {
   gap: 6px;
   overflow: hidden;
   color: #667e75;
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 0.65px;
   text-overflow: ellipsis;
   text-transform: uppercase;
@@ -1440,7 +1440,7 @@ a {
   margin-top: 5px;
   overflow: hidden;
   color: #c8d8d1;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 540;
   line-height: 1.3;
   text-overflow: ellipsis;
@@ -1451,7 +1451,7 @@ a {
   margin-top: 2px;
   overflow: hidden;
   color: #63786f;
-  font-size: 8px;
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1473,7 +1473,7 @@ a {
   width: max-content;
   padding: 3px 5px;
   border-radius: 4px;
-  font-size: 6.5px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.7px;
   line-height: 1;
@@ -1488,7 +1488,7 @@ a {
 
 .risk-pill b {
   margin-left: 2px;
-  font-size: 7px;
+  font-size: 10px;
 }
 
 .risk-critical {
@@ -1554,13 +1554,13 @@ a {
 .empty-feed strong {
   margin-top: 9px;
   color: #839a90;
-  font-size: 11px;
+  font-size: 13px;
 }
 
 .empty-feed p {
   max-width: 220px;
   margin: 6px 0 0;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.45;
 }
 
@@ -1572,7 +1572,7 @@ a {
   flex: 0 0 36px;
   border-top: 1px solid var(--line);
   color: #526960;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .feed-footer .live-indicator {
@@ -1610,7 +1610,7 @@ a {
 .detail-loading p {
   max-width: 245px;
   margin: 7px 0;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.55;
 }
 
@@ -1639,7 +1639,7 @@ a {
   border: 0;
   background: transparent;
   color: #718b81;
-  font-size: 9px;
+  font-size: 13px;
 }
 
 .back-button:hover {
@@ -1699,7 +1699,7 @@ a {
 .detail-header p {
   margin: 0;
   color: #697f76;
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
 }
@@ -1718,7 +1718,7 @@ a {
   align-items: center;
   gap: 4px;
   color: #63a58d;
-  font-size: 8px;
+  font-size: 11px;
   text-decoration: none;
 }
 
@@ -1747,14 +1747,14 @@ a {
 
 .detail-metrics span {
   color: #5c7068;
-  font-size: 7px;
+  font-size: 11px;
 }
 
 .detail-metrics strong {
   margin-top: 2px;
   overflow: hidden;
   color: #b9cbc2;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 560;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1775,7 +1775,7 @@ a {
   border: 0;
   background: transparent;
   color: #61776e;
-  font-size: 8px;
+  font-size: 12px;
   text-transform: capitalize;
 }
 
@@ -1826,7 +1826,7 @@ a {
   align-items: center;
   gap: 5px;
   color: #69b99b;
-  font-size: 7px;
+  font-size: 11px;
   letter-spacing: 0.8px;
   text-transform: uppercase;
 }
@@ -1843,7 +1843,7 @@ a {
 .intelligence-lede p {
   margin: 0;
   color: #61776e;
-  font-size: 7px;
+  font-size: 12px;
 }
 
 .brief-section {
@@ -1861,20 +1861,20 @@ a {
 .brief-section-heading > span {
   color: #3f7562;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 7px;
+  font-size: 11px;
 }
 
 .brief-section h3 {
   margin: 0;
   color: #aebfb7;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 630;
 }
 
 .brief-section > p {
   margin: 9px 0 0 26px;
   color: #849a90;
-  font-size: 9px;
+  font-size: 13px;
   line-height: 1.6;
 }
 
@@ -1883,7 +1883,7 @@ a {
   width: max-content;
   padding: 3px 5px;
   border-radius: 3px;
-  font-size: 6px;
+  font-size: 10px;
   font-style: normal;
   font-weight: 700;
   letter-spacing: 0.65px;
@@ -1919,14 +1919,14 @@ a {
 
 .limits-note strong {
   color: #a68e71;
-  font-size: 8px;
+  font-size: 12px;
   text-transform: uppercase;
 }
 
 .limits-note p {
   margin: 5px 0 0;
   color: #6d756f;
-  font-size: 7px;
+  font-size: 13px;
   line-height: 1.4;
 }
 
@@ -1944,7 +1944,7 @@ a {
 .section-intro p {
   margin: 4px 0 0;
   color: #5d746a;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .section-intro-icon {
@@ -1981,21 +1981,21 @@ a {
 .evidence-row h4 {
   margin: 0;
   color: #adbbb5;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 590;
 }
 
 .evidence-row p {
   margin: 4px 0;
   color: #758980;
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1.4;
 }
 
 .evidence-row small {
   display: block;
   color: #4e625a;
-  font-size: 7px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -2005,7 +2005,7 @@ a {
   gap: 3px;
   margin-top: 5px;
   color: #609b85;
-  font-size: 7px;
+  font-size: 11px;
   text-decoration: none;
 }
 
@@ -2060,20 +2060,20 @@ a {
 .timeline-entry time {
   color: #536a60;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 7px;
+  font-size: 11px;
 }
 
 .timeline-entry h4 {
   margin: 4px 0;
   color: #aebfb7;
-  font-size: 9px;
+  font-size: 13px;
   font-weight: 580;
 }
 
 .timeline-entry p {
   margin: 0 0 5px;
   color: #6b8178;
-  font-size: 8px;
+  font-size: 12px;
   line-height: 1.45;
 }
 
@@ -2136,7 +2136,7 @@ a {
 
 .knowledge-graph text {
   fill: #839b91;
-  font-size: 6px;
+  font-size: 10px;
 }
 
 .graph-legend {
@@ -2146,7 +2146,7 @@ a {
   padding: 8px;
   border-top: 1px solid var(--line);
   color: #61766e;
-  font-size: 7px;
+  font-size: 11px;
 }
 
 .graph-legend span {
@@ -2401,7 +2401,7 @@ a {
   }
 
   .detail-tabs button {
-    font-size: 8px;
+    font-size: 12px;
   }
 
   .orientation-overlay {
