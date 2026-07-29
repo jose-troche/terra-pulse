@@ -404,6 +404,10 @@ test("renders the live Earth dashboard and filters layers", async ({ page }) => 
     "data-basemap-language",
     "en"
   );
+  await expect(page.locator(".map-shell")).toHaveAttribute(
+    "data-basemap-palette",
+    "standard"
+  );
   await expect(page.locator(".map-coordinate-label")).toContainText(
     "STARTING NEAR San Francisco, California · APPROXIMATE"
   );
@@ -435,6 +439,10 @@ test("filters the map and feed from the critical and high totals", async ({
     "1 signal plotted",
     { timeout: 15_000 }
   );
+  await expect(page.locator(".map-shell")).toHaveAttribute(
+    "data-camera-focus",
+    "critical:1"
+  );
 
   await page.getByRole("button", { name: "Clear filter" }).click();
   await expect(page.locator(".event-card")).toHaveCount(3);
@@ -453,6 +461,10 @@ test("filters the map and feed from the critical and high totals", async ({
   await expect(page.locator(".map-signal-count")).toContainText(
     "2 signals plotted",
     { timeout: 15_000 }
+  );
+  await expect(page.locator(".map-shell")).toHaveAttribute(
+    "data-camera-focus",
+    "high:2"
   );
 });
 

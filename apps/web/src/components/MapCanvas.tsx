@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AttributionControl,
+  LngLatBounds,
   Map,
   type ExpressionSpecification,
   type ErrorEvent,
@@ -27,6 +28,7 @@ interface MapCanvasProps {
   activeTypes: Set<EventType>;
   selectedId?: string;
   viewerLocation?: ViewerLocation;
+  focusGroup?: "critical" | "high";
   onSelect: (eventId: string) => void;
 }
 
@@ -37,7 +39,7 @@ const mapStyle: StyleSpecification = {
     osm: {
       type: "raster",
       tiles: [
-        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png"
+        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png"
       ],
       tileSize: 256,
       attribution:
@@ -48,18 +50,18 @@ const mapStyle: StyleSpecification = {
     {
       id: "background",
       type: "background",
-      paint: { "background-color": "#061613" }
+      paint: { "background-color": "#cfe8ee" }
     },
     {
       id: "osm",
       type: "raster",
       source: "osm",
       paint: {
-        "raster-saturation": -0.25,
-        "raster-contrast": 0.12,
-        "raster-brightness-min": 0.1,
-        "raster-brightness-max": 0.82,
-        "raster-opacity": 0.95
+        "raster-saturation": -0.04,
+        "raster-contrast": 0.08,
+        "raster-brightness-min": 0.03,
+        "raster-brightness-max": 1,
+        "raster-opacity": 1
       }
     }
   ]
@@ -152,6 +154,7 @@ export function MapCanvas({
   activeTypes,
   selectedId,
   viewerLocation,
+  focusGroup,
   onSelect
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -159,12 +162,14 @@ export function MapCanvas({
   const onSelectRef = useRef(onSelect);
   const hasAutoFocusedRef = useRef(false);
   const lastAppliedPacketRef = useRef("");
+  const lastFocusedGroupRef = useRef<string | undefined>(undefined);
   const visibleEventsRef = useRef<EarthEvent[]>([]);
   const [projection, setProjection] = useState<"globe" | "mercator">("globe");
   const [mapError, setMapError] = useState(false);
   const [signalsReady, setSignalsReady] = useState(false);
   const [iconsReady, setIconsReady] = useState(false);
   const [severityDotsReady, setSeverityDotsReady] = useState(false);
+  const [cameraFocus, setCameraFocus] = useState("viewer");
 
   onSelectRef.current = onSelect;
 
@@ -423,6 +428,54 @@ export function MapCanvas({
     });
   }, [events, selectedId]);
 
+  useEffect(() => {
+    if (!focusGroup) {
+      lastFocusedGroupRef.current = undefined;
+      return;
+    }
+    const map = mapRef.current;
+    if (!map || visibleEvents.length === 0) return;
+    const focusKey = `${focusGroup}:${visibleEvents
+      .map((event) => event.id)
+      .sort()
+      .join("|")}`;
+    if (lastFocusedGroupRef.current === focusKey) return;
+
+    const focusSelectedGroup = () => {
+      if (visibleEvents.length === 1) {
+        const [event] = visibleEvents;
+        if (!event) return;
+        map.flyTo({
+          center: [
+            event.coordinates.longitude,
+            event.coordinates.latitude
+          ],
+          zoom: Math.max(map.getZoom(), 4.2),
+          duration: 950,
+          essential: true
+        });
+      } else {
+        const bounds = new LngLatBounds();
+        for (const event of visibleEvents) {
+          bounds.extend([
+            event.coordinates.longitude,
+            event.coordinates.latitude
+          ]);
+        }
+        map.fitBounds(bounds, {
+          padding: 72,
+          maxZoom: 4.8,
+          duration: 1050,
+          essential: true
+        });
+      }
+      lastFocusedGroupRef.current = focusKey;
+      setCameraFocus(`${focusGroup}:${visibleEvents.length}`);
+    };
+
+    focusSelectedGroup();
+  }, [focusGroup, visibleEvents]);
+
   const zoom = (delta: number) => {
     const map = mapRef.current;
     if (!map) return;
@@ -468,6 +521,8 @@ export function MapCanvas({
       data-event-icons={iconsReady ? "ready" : "loading"}
       data-severity-dots={severityDotsReady ? "ready" : "loading"}
       data-basemap-language="en"
+      data-basemap-palette="standard"
+      data-camera-focus={cameraFocus}
     >
       <div ref={containerRef} className="map-canvas" data-testid="earth-map" />
       <div className="map-vignette" aria-hidden="true" />

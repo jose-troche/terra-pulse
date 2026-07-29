@@ -497,6 +497,7 @@ export default function App() {
               activeTypes={activeTypes}
               selectedId={selectedId}
               viewerLocation={data?.viewerLocation}
+              focusGroup={priorityFilter}
               onSelect={(eventId) => void selectEvent(eventId)}
             />
           </Suspense>
