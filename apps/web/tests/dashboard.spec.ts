@@ -106,7 +106,15 @@ const eventsResponse = {
     }
   ],
   generatedAt: now,
-  degraded: false
+  degraded: false,
+  viewerLocation: {
+    coordinates: { latitude: 37.7749, longitude: -122.4194 },
+    source: "cloudflare",
+    precision: "approximate",
+    city: "San Francisco",
+    region: "California",
+    country: "US"
+  }
 };
 
 const detailResponse = {
@@ -236,11 +244,18 @@ async function mockApi(page: Page) {
       return;
     }
     if (pathname === "/api/ask") {
+      const payload = request.postDataJSON() as { question?: string };
+      const isRegionalWildfireQuestion = payload.question
+        ?.toLowerCase()
+        .includes("elevated wildfire risk");
       await route.fulfill({
         json: {
-          answer:
-            "The current packet shows one critical earthquake and two high-priority weather or fire signals.",
-          classification: "observed",
+          answer: isRegionalWildfireQuestion
+            ? "Using deterministic 350 km geographic clustering, Northwest Territories, Canada is the leading computed monitoring area with 1 active signal. This is not a forecast."
+            : "The current packet shows one critical earthquake and two high-priority weather or fire signals.",
+          classification: isRegionalWildfireQuestion
+            ? "computed"
+            : "observed",
           confidence: "high",
           citations: [{ label: "USGS" }, { label: "NASA EONET" }],
           sessionId: "test-session-123",
@@ -308,6 +323,18 @@ test("renders the live Earth dashboard and filters layers", async ({ page }) => 
     "3 signals plotted",
     { timeout: 15_000 }
   );
+  await expect(page.locator(".map-shell")).toHaveAttribute(
+    "data-starting-view",
+    "viewer"
+  );
+  await expect(page.locator(".map-shell")).toHaveAttribute(
+    "data-event-icons",
+    "ready",
+    { timeout: 15_000 }
+  );
+  await expect(page.locator(".map-coordinate-label")).toContainText(
+    "STARTING NEAR San Francisco, California · APPROXIMATE"
+  );
   await expect(page.getByText("M 7.1 - near Sendai, Japan")).toBeVisible();
   await expect(page.getByText("Northwest Territories Wildfires")).toBeVisible();
   await expect(page.getByText("Active signals").first()).toBeVisible();
@@ -366,6 +393,20 @@ test("returns from an Ask Earth answer to the example questions", async ({
       name: "Which areas show elevated wildfire risk?"
     })
   ).toBeVisible();
+});
+
+test("uses computed clustering for regional wildfire risk", async ({ page }) => {
+  await openDashboard(page);
+  const menu = page.getByRole("button", { name: "Open layer controls" });
+  if (await menu.isVisible()) await menu.click();
+
+  await page
+    .getByRole("button", {
+      name: "Which areas show elevated wildfire risk?"
+    })
+    .click();
+  await expect(page.getByText(/deterministic 350 km geographic clustering/)).toBeVisible();
+  await expect(page.getByText(/not a forecast/)).toBeVisible();
 });
 
 test("keeps the mobile dashboard within the viewport", async ({ page }) => {

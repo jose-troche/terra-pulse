@@ -2,7 +2,8 @@ import { DurableObject } from "cloudflare:workers";
 import type {
   AskEarthResponse,
   EventDetailResponse,
-  EventListResponse
+  EventListResponse,
+  RegionalRiskAnalysis
 } from "@terra-pulse/earth-domain";
 
 interface SessionHistoryItem {
@@ -16,6 +17,7 @@ interface SessionRequest {
   deterministic: AskEarthResponse;
   detail?: EventDetailResponse;
   overview: EventListResponse;
+  regionalRisk?: RegionalRiskAnalysis;
 }
 
 function aiText(result: unknown): string | undefined {
@@ -28,6 +30,16 @@ function aiText(result: unknown): string | undefined {
     return result.response.trim();
   }
   return undefined;
+}
+
+function isUsefulRegionalExplanation(candidate: string): boolean {
+  const normalized = candidate.toLowerCase();
+  return (
+    /\b(computed|cluster|source|signal|concentration)\b/.test(normalized) &&
+    /\b(forecast|probability|coverage|limitation|approximation)\b/.test(
+      normalized
+    )
+  );
 }
 
 export class EarthSession extends DurableObject<Env> {
@@ -48,6 +60,13 @@ export class EarthSession extends DurableObject<Env> {
             brief: payload.detail.brief,
             timeline: payload.detail.timeline
           }
+        : payload.regionalRisk
+        ? {
+            method: payload.regionalRisk.method,
+            clusterRadiusKm: payload.regionalRisk.clusterRadiusKm,
+            analyzedEventCount: payload.regionalRisk.analyzedEventCount,
+            limitations: payload.regionalRisk.limitations
+          }
         : {
             status: payload.overview.status,
             events: payload.overview.events.slice(0, 12),
@@ -59,8 +78,9 @@ export class EarthSession extends DurableObject<Env> {
           messages: [
             {
               role: "system",
-              content:
-                "You are Terra Pulse, an Earth intelligence explainer. Use only the supplied JSON evidence. Never invent casualties, damage, exposure, forecasts, or infrastructure. Clearly distinguish observations from computations and uncertainty. Answer in at most 110 words. If the evidence cannot answer, say what is unknown."
+              content: payload.regionalRisk
+                ? "You are Terra Pulse, an Earth intelligence explainer. The application has already computed and displayed the ranked regions. Using only the supplied method JSON, return a brief one- or two-sentence explanation of how to interpret the computation and its main limitation. Do not name or rank regions and do not repeat counts. Describe it as computed monitoring priority, never as probability or prediction. Use at most 45 words."
+                : "You are Terra Pulse, an Earth intelligence explainer. Use only the supplied JSON evidence. Never invent casualties, damage, exposure, forecasts, or infrastructure. Clearly distinguish observations from computations and uncertainty. Answer in at most 110 words. If the evidence cannot answer, say what is unknown."
             },
             {
               role: "user",
@@ -72,12 +92,18 @@ export class EarthSession extends DurableObject<Env> {
             }
           ],
           max_tokens: 180,
-          temperature: 0.2
+          temperature: payload.regionalRisk ? 0.1 : 0.2
         }
       );
       const candidate = aiText(result);
-      if (candidate) {
-        answer = candidate;
+      if (
+        candidate &&
+        (!payload.regionalRisk ||
+          isUsefulRegionalExplanation(candidate))
+      ) {
+        answer = payload.regionalRisk
+          ? `${payload.deterministic.answer} ${candidate}`
+          : candidate;
         generatedBy = "workers-ai";
       }
     } catch (error) {

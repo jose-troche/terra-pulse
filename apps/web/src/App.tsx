@@ -448,6 +448,7 @@ export default function App() {
               events={data?.events ?? []}
               activeTypes={activeTypes}
               selectedId={selectedId}
+              viewerLocation={data?.viewerLocation}
               onSelect={(eventId) => void selectEvent(eventId)}
             />
           </Suspense>

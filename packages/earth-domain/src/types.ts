@@ -71,12 +71,53 @@ export interface EarthStatus {
   byType: Record<EventType, number>;
 }
 
+export interface ViewerLocation {
+  coordinates: Coordinates;
+  source: "cloudflare";
+  precision: "approximate";
+  city?: string;
+  region?: string;
+  country?: string;
+}
+
 export interface EventListResponse {
   events: EarthEvent[];
   status: EarthStatus;
   sources: SourceStatus[];
   generatedAt: string;
   degraded: boolean;
+  viewerLocation?: ViewerLocation;
+}
+
+export interface RegionalRiskEvent {
+  id: string;
+  title: string;
+  location: string;
+  type: EventType;
+  riskScore: number;
+}
+
+export interface RegionalRiskRegion {
+  id: string;
+  label: string;
+  center: Coordinates;
+  eventCount: number;
+  score: number;
+  riskLevel: RiskLevel;
+  meanEventRiskScore: number;
+  maxEventRiskScore: number;
+  latestUpdatedAt: string;
+  examples: RegionalRiskEvent[];
+}
+
+export interface RegionalRiskAnalysis {
+  requestedType?: EventType;
+  method: string;
+  clusterRadiusKm: number;
+  analyzedEventCount: number;
+  generatedAt: string;
+  regions: RegionalRiskRegion[];
+  limitations: string[];
 }
 
 export interface EvidenceItem {

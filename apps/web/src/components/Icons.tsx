@@ -1,13 +1,5 @@
-import {
-  Activity,
-  CloudLightning,
-  Flame,
-  Mountain,
-  ThermometerSun,
-  Waves,
-  Wind
-} from "lucide-react";
 import type { EventType } from "@terra-pulse/earth-domain";
+import { eventIconPaths } from "../lib/event-icons";
 
 interface EventIconProps {
   type: EventType;
@@ -20,14 +12,24 @@ export function EventIcon({
   size = 16,
   strokeWidth = 1.8
 }: EventIconProps) {
-  const props = { size, strokeWidth, "aria-hidden": true };
-  if (type === "earthquake") return <Activity {...props} />;
-  if (type === "wildfire") return <Flame {...props} />;
-  if (type === "storm") return <CloudLightning {...props} />;
-  if (type === "flood") return <Waves {...props} />;
-  if (type === "volcano") return <Mountain {...props} />;
-  if (type === "air_quality") return <Wind {...props} />;
-  return <ThermometerSun {...props} />;
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      {eventIconPaths[type].map((path) => (
+        <path key={path} d={path} />
+      ))}
+    </svg>
+  );
 }
 
 export function TerraMark() {

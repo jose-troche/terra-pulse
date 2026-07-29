@@ -11,8 +11,13 @@ import {
   type StyleSpecification
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
-import type { EarthEvent, EventType } from "@terra-pulse/earth-domain";
+import type {
+  EarthEvent,
+  EventType,
+  ViewerLocation
+} from "@terra-pulse/earth-domain";
 import { Focus, Globe2, Map as MapIcon, Minus, Plus } from "lucide-react";
+import { eventIconPaths, eventTypes } from "../lib/event-icons";
 import { eventColors } from "../lib/format";
 
 setWorkerUrl("/maplibre-gl-worker.mjs");
@@ -21,6 +26,7 @@ interface MapCanvasProps {
   events: EarthEvent[];
   activeTypes: Set<EventType>;
   selectedId?: string;
+  viewerLocation?: ViewerLocation;
   onSelect: (eventId: string) => void;
 }
 
@@ -49,11 +55,11 @@ const mapStyle: StyleSpecification = {
       type: "raster",
       source: "osm",
       paint: {
-        "raster-saturation": -0.86,
-        "raster-contrast": 0.22,
-        "raster-brightness-min": 0.05,
-        "raster-brightness-max": 0.42,
-        "raster-opacity": 0.9
+        "raster-saturation": -0.58,
+        "raster-contrast": 0.3,
+        "raster-brightness-min": 0.06,
+        "raster-brightness-max": 0.56,
+        "raster-opacity": 0.95
       }
     }
   ]
@@ -102,10 +108,37 @@ const toEventFeatureCollection = (events: EarthEvent[]) => ({
 const eventPacketKey = (events: EarthEvent[]) =>
   events.map((event) => `${event.id}:${event.updatedAt}`).join("|");
 
+function eventIconImage(type: EventType): Promise<HTMLImageElement> {
+  const paths = eventIconPaths[type]
+    .map((path) => `<path d="${path}"/>`)
+    .join("");
+  const source = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#f7fff9" stroke-width="2.35" stroke-linecap="round" stroke-linejoin="round">${paths}</svg>`;
+  return new Promise((resolve, reject) => {
+    const image = new Image(32, 32);
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Could not load ${type} map icon.`));
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(source)}`;
+  });
+}
+
+async function registerEventIcons(map: MapLibreMap): Promise<void> {
+  const images = await Promise.all(
+    eventTypes.map(async (type) => ({
+      type,
+      image: await eventIconImage(type)
+    }))
+  );
+  for (const { type, image } of images) {
+    const id = `event-icon-${type}`;
+    if (!map.hasImage(id)) map.addImage(id, image);
+  }
+}
+
 export function MapCanvas({
   events,
   activeTypes,
   selectedId,
+  viewerLocation,
   onSelect
 }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -117,6 +150,7 @@ export function MapCanvas({
   const [projection, setProjection] = useState<"globe" | "mercator">("globe");
   const [mapError, setMapError] = useState(false);
   const [signalsReady, setSignalsReady] = useState(false);
+  const [iconsReady, setIconsReady] = useState(false);
 
   onSelectRef.current = onSelect;
 
@@ -125,6 +159,11 @@ export function MapCanvas({
     [activeTypes, events]
   );
   visibleEventsRef.current = visibleEvents;
+  const viewerLocationLabel = viewerLocation
+    ? [viewerLocation.city, viewerLocation.region ?? viewerLocation.country]
+        .filter(Boolean)
+        .join(", ")
+    : "";
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -132,8 +171,13 @@ export function MapCanvas({
       const map = new Map({
         container: containerRef.current,
         style: mapStyle,
-        center: [8, 18],
-        zoom: 1.45,
+        center: viewerLocation
+          ? [
+              viewerLocation.coordinates.longitude,
+              viewerLocation.coordinates.latitude
+            ]
+          : [8, 18],
+        zoom: viewerLocation ? 2.45 : 1.45,
         minZoom: 1,
         maxZoom: 9,
         attributionControl: false,
@@ -219,6 +263,43 @@ export function MapCanvas({
             "circle-opacity": 1
           }
         });
+        void registerEventIcons(map)
+          .then(() => {
+            if (!map.getSource("earth-events") || map.getLayer("event-icons")) {
+              return;
+            }
+            map.addLayer({
+              id: "event-icons",
+              type: "symbol",
+              source: "earth-events",
+              layout: {
+                "icon-image": [
+                  "concat",
+                  "event-icon-",
+                  ["get", "type"]
+                ],
+                "icon-size": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "riskScore"],
+                  0,
+                  0.36,
+                  100,
+                  0.62
+                ],
+                "icon-allow-overlap": true,
+                "icon-ignore-placement": true
+              }
+            });
+            setIconsReady(true);
+          })
+          .catch((error: unknown) => {
+            console.warn(
+              error instanceof Error
+                ? error.message
+                : "Could not load map event icons."
+            );
+          });
         map.on("mouseenter", "event-points", () => {
           map.getCanvas().style.cursor = "pointer";
         });
@@ -275,11 +356,22 @@ export function MapCanvas({
         ]);
       }
       map.triggerRepaint();
-      if (!hasAutoFocusedRef.current && visibleEvents.length > 0) {
+      if (!hasAutoFocusedRef.current && !selectedId) {
         const priorityEvent = [...visibleEvents].sort(
           (left, right) => right.riskScore - left.riskScore
         ).at(0);
-        if (priorityEvent) {
+        if (viewerLocation) {
+          hasAutoFocusedRef.current = true;
+          map.flyTo({
+            center: [
+              viewerLocation.coordinates.longitude,
+              viewerLocation.coordinates.latitude
+            ],
+            zoom: 2.45,
+            duration: 1100,
+            essential: true
+          });
+        } else if (priorityEvent) {
           hasAutoFocusedRef.current = true;
           map.flyTo({
             center: [
@@ -295,7 +387,7 @@ export function MapCanvas({
     };
     if (map.isStyleLoaded()) update();
     else map.once("load", update);
-  }, [selectedId, visibleEvents]);
+  }, [selectedId, viewerLocation, visibleEvents]);
 
   useEffect(() => {
     if (!selectedId) return;
@@ -320,13 +412,18 @@ export function MapCanvas({
       (left, right) => right.riskScore - left.riskScore
     ).at(0);
     mapRef.current?.flyTo({
-      center: priorityEvent
+      center: viewerLocation
+        ? [
+            viewerLocation.coordinates.longitude,
+            viewerLocation.coordinates.latitude
+          ]
+        : priorityEvent
         ? [
             priorityEvent.coordinates.longitude,
             priorityEvent.coordinates.latitude
           ]
         : [8, 18],
-      zoom: priorityEvent ? 2.15 : 1.45,
+      zoom: viewerLocation ? 2.45 : priorityEvent ? 2.15 : 1.45,
       bearing: 0,
       pitch: 0,
       duration: 900,
@@ -343,7 +440,11 @@ export function MapCanvas({
   };
 
   return (
-    <div className="map-shell">
+    <div
+      className="map-shell"
+      data-starting-view={viewerLocation ? "viewer" : "priority"}
+      data-event-icons={iconsReady ? "ready" : "loading"}
+    >
       <div ref={containerRef} className="map-canvas" data-testid="earth-map" />
       <div className="map-vignette" aria-hidden="true" />
       {mapError ? (
@@ -373,8 +474,10 @@ export function MapCanvas({
           {projection === "globe" ? <MapIcon size={16} /> : <Globe2 size={16} />}
         </button>
       </div>
-      <div className="map-coordinate-label" aria-hidden="true">
-        LIVE EARTH OBSERVATION · 3D
+      <div className="map-coordinate-label">
+        {viewerLocation
+          ? `STARTING NEAR ${viewerLocationLabel || "YOUR REGION"} · APPROXIMATE`
+          : "LIVE EARTH OBSERVATION · 3D"}
       </div>
       <div className="map-signal-count" aria-live="polite">
         <span className="live-indicator" />

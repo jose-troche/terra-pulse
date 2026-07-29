@@ -9,6 +9,7 @@ import {
   filterEvents,
   persistEvents
 } from "./services/events";
+import { viewerLocationFromCf } from "./services/location";
 
 export { EarthSession };
 
@@ -40,7 +41,12 @@ async function routeApi(
   }
   if (request.method === "GET" && url.pathname === "/api/events") {
     const response = await collectEvents(env);
-    return json(filterEvents(response, url));
+    const filtered = filterEvents(response, url);
+    const viewerLocation = viewerLocationFromCf(request.cf);
+    return json({
+      ...filtered,
+      ...(viewerLocation ? { viewerLocation } : {})
+    });
   }
   if (request.method === "GET" && url.pathname === "/api/sources") {
     const response = await collectEvents(env);
@@ -83,7 +89,7 @@ async function routeApi(
       );
     }
     const id = sessionId(askRequest.sessionId);
-    const deterministic = deterministicAnswer(
+    const deterministicResult = deterministicAnswer(
       askRequest.question,
       overview,
       id,
@@ -96,9 +102,12 @@ async function routeApi(
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         question: askRequest.question,
-        deterministic,
+        deterministic: deterministicResult.response,
         overview,
-        ...(detail ? { detail } : {})
+        ...(detail ? { detail } : {}),
+        ...(deterministicResult.regionalRisk
+          ? { regionalRisk: deterministicResult.regionalRisk }
+          : {})
       })
     });
   }
