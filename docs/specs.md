@@ -206,9 +206,26 @@ Provides:
 * wind
 * air quality
 
+The implemented global air-quality layer samples a bounded set of major cities
+in one batched request and creates events only when modeled US AQI is at least
+101. These are CAMS model signals, not local monitor observations.
+
 ---
 
-## 6. Humanitarian Information
+## 6. Drought Alerts
+
+### GDACS
+
+Provides:
+
+* recently updated drought alerts
+* alert severity
+* affected-country context
+* approximate event centroids
+
+---
+
+## 7. Humanitarian Information
 
 ### ReliefWeb API
 
@@ -219,7 +236,7 @@ Provides:
 
 ---
 
-## 7. Geographic Context
+## 8. Geographic Context
 
 ### Natural Earth / OpenStreetMap
 
@@ -232,7 +249,7 @@ Provides:
 
 ---
 
-## 8. Population Context
+## 9. Population Context
 
 ### World Bank / WorldPop
 

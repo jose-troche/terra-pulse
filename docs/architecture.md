@@ -14,8 +14,11 @@ flowchart LR
 
   W --> C[Collection layer]
   C --> USGS[USGS]
+  C --> USGSV[USGS Volcano Alerts]
   C --> EONET[NASA EONET]
   C --> NWS[NOAA / NWS]
+  C --> CAMS[Open-Meteo / CAMS]
+  C --> GDACS[GDACS Drought]
 
   W --> X[Context layer]
   X --> OM[Open-Meteo]
@@ -45,9 +48,10 @@ flowchart LR
 
 ## Runtime flow
 
-1. `/api/events` checks source-specific KV entries, fetches expired feeds in
-   parallel, normalizes them, calculates priority, and returns a source-status
-   envelope.
+1. `/api/events` checks source-specific KV entries, fetches six expired feeds
+   in parallel, normalizes them, calculates priority, and returns a
+   source-status envelope. The default bounded map packet reserves capacity for
+   every available event family before filling remaining slots by priority.
 2. `/api/events/:id` adds point weather, air quality, nearby reference cities,
    mapped hospitals, D1 history, evidence labels, and graph relationships.
 3. `/api/ask` creates a deterministic answer first. A per-session Durable Object

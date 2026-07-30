@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { normalizeEonet } from "../src/collectors/eonet";
+import { normalizeGdacsDroughts } from "../src/collectors/gdacs";
 import { normalizeNws } from "../src/collectors/nws";
+import { normalizeOpenMeteoAirQuality } from "../src/collectors/open-meteo-air";
 import { normalizeUsgs } from "../src/collectors/usgs";
+import { normalizeUsgsVolcanoes } from "../src/collectors/usgs-volcano";
 
 const retrievedAt = "2026-07-28T12:00:00.000Z";
 
@@ -108,6 +111,120 @@ describe("source normalizers", () => {
       type: "storm",
       riskLevel: "high",
       location: "Coastal test area"
+    });
+  });
+
+  it("normalizes current USGS elevated volcano alerts", () => {
+    const events = normalizeUsgsVolcanoes(
+      [
+        {
+          volcano_name: "Great Sitkin",
+          vnum: "311120",
+          obs_fullname: "Alaska Volcano Observatory",
+          sent_unixtime: Date.parse("2026-07-28T19:57:13Z") / 1000,
+          color_code: "ORANGE",
+          alert_level: "WATCH",
+          notice_url: "https://example.com/notice"
+        }
+      ],
+      [
+        {
+          volcano_name: "Great Sitkin",
+          vnum: "311120",
+          region: "Aleutians",
+          latitude: 52.0765,
+          longitude: -176.1109
+        }
+      ],
+      retrievedAt
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: "volcano",
+      riskLevel: "high",
+      location: "Aleutians",
+      source: { id: "usgs-volcano" }
+    });
+  });
+
+  it("promotes unhealthy CAMS air quality into transparent modeled events", () => {
+    const events = normalizeOpenMeteoAirQuality(
+      [
+        {
+          current: {
+            time: "2026-07-28T12:00",
+            us_aqi: 170,
+            pm2_5: 122.9
+          }
+        },
+        {
+          current: {
+            time: "2026-07-28T12:00",
+            us_aqi: 48,
+            pm2_5: 7
+          }
+        }
+      ],
+      [
+        {
+          name: "Jakarta",
+          country: "Indonesia",
+          latitude: -6.21,
+          longitude: 106.85,
+          population: 11_436_000
+        },
+        {
+          name: "Tokyo",
+          country: "Japan",
+          latitude: 35.68,
+          longitude: 139.69,
+          population: 37_115_000
+        }
+      ],
+      retrievedAt
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: "air_quality",
+      riskLevel: "high",
+      location: "Jakarta, Indonesia",
+      source: { id: "open-meteo-air" }
+    });
+    expect(events[0]?.description).toContain("modeled regional guidance");
+  });
+
+  it("normalizes recently updated GDACS drought centroids", () => {
+    const events = normalizeGdacsDroughts(
+      {
+        features: [
+          {
+            geometry: { coordinates: [82.956, 48.012] },
+            properties: {
+              eventtype: "DR",
+              eventid: 1027491,
+              name: "Drought in Kazakhstan",
+              country: "Kazakhstan",
+              alertlevel: "Green",
+              fromdate: "2026-05-01T00:00:00Z",
+              datemodified: "2026-07-28T10:00:00Z",
+              url: { report: "https://example.com/drought" },
+              severitydata: {
+                severity: 727014,
+                severityunit: "km2",
+                severitytext: "Minor agricultural drought impact"
+              }
+            }
+          }
+        ]
+      },
+      retrievedAt
+    );
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      type: "climate",
+      riskLevel: "moderate",
+      source: { id: "gdacs" },
+      severity: { unit: "km2" }
     });
   });
 });

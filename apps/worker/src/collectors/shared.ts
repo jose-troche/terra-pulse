@@ -12,6 +12,7 @@ interface FetchJsonOptions {
   cacheKey: string;
   ttlSeconds: number;
   headers?: Record<string, string>;
+  timeoutMs?: number;
 }
 
 export async function fetchSourceJson<T>(
@@ -29,7 +30,14 @@ export async function fetchSourceJson<T>(
   }
 
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort("Source request timed out"), 8_000);
+  const timeoutMs = Math.min(
+    15_000,
+    Math.max(1_000, options.timeoutMs ?? 8_000)
+  );
+  const timeout = setTimeout(
+    () => controller.abort("Source request timed out"),
+    timeoutMs
+  );
   try {
     const response = await fetch(url, {
       signal: controller.signal,

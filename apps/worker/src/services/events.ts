@@ -9,8 +9,11 @@ import {
   type TimelineEntry
 } from "@terra-pulse/earth-domain";
 import { collectEonet } from "../collectors/eonet";
+import { collectGdacsDroughts } from "../collectors/gdacs";
 import { collectNws } from "../collectors/nws";
+import { collectOpenMeteoAirQuality } from "../collectors/open-meteo-air";
 import { collectUsgs } from "../collectors/usgs";
+import { collectUsgsVolcanoes } from "../collectors/usgs-volcano";
 import { fallbackEvents } from "./fallback";
 
 interface SourceCollection {
@@ -30,8 +33,34 @@ const collectors: SourceCollection[] = [
     run: collectUsgs
   },
   { id: "eonet", name: "NASA EONET", run: collectEonet },
-  { id: "nws", name: "NOAA / National Weather Service", run: collectNws }
+  { id: "nws", name: "NOAA / National Weather Service", run: collectNws },
+  {
+    id: "usgs-volcano",
+    name: "USGS Volcano Hazards Program",
+    run: collectUsgsVolcanoes
+  },
+  {
+    id: "open-meteo-air",
+    name: "Open-Meteo / Copernicus CAMS Air Quality",
+    run: collectOpenMeteoAirQuality
+  },
+  {
+    id: "gdacs",
+    name: "Global Disaster Alert and Coordination System (GDACS)",
+    run: collectGdacsDroughts
+  }
 ];
+
+const eventTypeOrder: EventType[] = [
+  "earthquake",
+  "wildfire",
+  "storm",
+  "flood",
+  "volcano",
+  "air_quality",
+  "climate"
+];
+const DEFAULT_TYPE_RESERVE = 8;
 
 function logSourceFailure(id: string, error: unknown): void {
   console.warn(
@@ -111,21 +140,53 @@ export function filterEvents(
     200,
     Math.max(1, Number(url.searchParams.get("limit") ?? "120"))
   );
-  const events = response.events
-    .filter(
-      (event) =>
-        (!types || types.includes(event.type)) &&
-        (!search ||
-          event.title.toLowerCase().includes(search) ||
-          event.location.toLowerCase().includes(search)) &&
-        event.riskScore >= (Number.isFinite(minimumRisk) ? minimumRisk : 0)
-    )
-    .slice(0, limit);
+  const filtered = response.events.filter(
+    (event) =>
+      (!types || types.includes(event.type)) &&
+      (!search ||
+        event.title.toLowerCase().includes(search) ||
+        event.location.toLowerCase().includes(search)) &&
+      event.riskScore >= (Number.isFinite(minimumRisk) ? minimumRisk : 0)
+  );
+  const events =
+    types || search || minimumRisk > 0
+      ? filtered.slice(0, limit)
+      : selectBalancedEvents(filtered, limit);
   return {
     ...response,
     events,
     status: summarizeEarth(events)
   };
+}
+
+export function selectBalancedEvents(
+  events: EarthEvent[],
+  limit: number
+): EarthEvent[] {
+  if (events.length <= limit) return events;
+  const selected: EarthEvent[] = [];
+  const selectedIds = new Set<string>();
+  const perTypeReserve = Math.min(
+    DEFAULT_TYPE_RESERVE,
+    Math.max(1, Math.floor(limit / eventTypeOrder.length))
+  );
+  for (const type of eventTypeOrder) {
+    const candidates = events
+      .filter((event) => event.type === type)
+      .slice(0, perTypeReserve);
+    for (const event of candidates) {
+      if (selected.length >= limit) break;
+      selected.push(event);
+      selectedIds.add(event.id);
+    }
+  }
+  for (const event of events) {
+    if (selected.length >= limit) break;
+    if (selectedIds.has(event.id)) continue;
+    selected.push(event);
+    selectedIds.add(event.id);
+  }
+  return sortByRiskAndTime(selected);
 }
 
 export async function persistEvents(

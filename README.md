@@ -20,7 +20,9 @@ migrations/            D1 schema and event history
 
 ## What works
 
-- Live USGS earthquakes, NASA EONET natural events, and NOAA/NWS alerts
+- Six live collection feeds: USGS earthquakes, USGS elevated volcano alerts,
+  NASA EONET natural events, NOAA/NWS alerts, Open-Meteo/Copernicus CAMS air
+  quality, and GDACS drought alerts
 - Open-Meteo weather and air-quality context for a selected event
 - OpenStreetMap hospital proximity counts with explicit coverage limits
 - Interactive MapLibre globe, event layers, search, filters, and priority feed
@@ -80,9 +82,12 @@ For deployment from a different Cloudflare account, create resources with
 
 The Worker automatically creates the SQLite-backed `EarthSession` Durable
 Object namespace and binds Workers AI. No secret or paid data API is required.
-Static asset requests bypass Worker invocation. The 15-minute collector cadence,
-bounded event persistence, cache TTLs, and compact AI prompts are designed for
-the Workers, D1, KV, Durable Objects, and Workers AI free allocations.
+Static asset requests bypass Worker invocation. The six collectors run in
+parallel and use source-specific KV TTLs; the air-quality collector batches its
+global reference cities into one request, while static volcano coordinates are
+cached for one day. The 15-minute cadence, bounded event persistence, cache
+TTLs, and compact AI prompts are designed for the Workers, D1, KV, Durable
+Objects, and Workers AI free allocations.
 
 See [architecture.md](docs/architecture.md) for the system design and
 [methodology.md](docs/methodology.md) for evidence and risk semantics.

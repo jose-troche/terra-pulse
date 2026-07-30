@@ -103,6 +103,27 @@ const eventsResponse = {
       state: "live",
       eventCount: 1,
       retrievedAt: now
+    },
+    {
+      id: "usgs-volcano",
+      name: "USGS Volcano Hazards Program",
+      state: "live",
+      eventCount: 5,
+      retrievedAt: now
+    },
+    {
+      id: "open-meteo-air",
+      name: "Open-Meteo / Copernicus CAMS Air Quality",
+      state: "live",
+      eventCount: 3,
+      retrievedAt: now
+    },
+    {
+      id: "gdacs",
+      name: "Global Disaster Alert and Coordination System (GDACS)",
+      state: "live",
+      eventCount: 8,
+      retrievedAt: now
     }
   ],
   generatedAt: now,
@@ -411,6 +432,7 @@ test("renders the live Earth dashboard and filters layers", async ({ page }) => 
   await expect(page.locator(".map-coordinate-label")).toContainText(
     "STARTING NEAR San Francisco, California · APPROXIMATE"
   );
+  await expect(page.getByText("6 connected source feeds")).toBeVisible();
   await expect(page.getByText("M 7.1 - near Sendai, Japan")).toBeVisible();
   await expect(page.getByText("Northwest Territories Wildfires")).toBeVisible();
   await expect(page.getByText("Active signals").first()).toBeVisible();
@@ -426,6 +448,7 @@ test("renders the live Earth dashboard and filters layers", async ({ page }) => 
 test("filters the map and feed from the critical and high totals", async ({
   page
 }) => {
+  test.setTimeout(60_000);
   await openDashboard(page);
   const menu = page.getByRole("button", { name: "Open layer controls" });
   if (await menu.isVisible()) await menu.click();

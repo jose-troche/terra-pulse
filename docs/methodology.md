@@ -47,9 +47,18 @@ to the deterministic answer.
 
 - USGS earthquake latency is typically minutes, but event review can change
   magnitude, depth, and status.
+- USGS elevated-volcano records cover volcanoes monitored by participating
+  United States observatories; they are not a complete global eruption census.
 - EONET geometry can be approximate and event categories have uneven latency.
 - NWS alerts cover the United States and some territories, not the world.
-- Open-Meteo point conditions do not prove event impact.
+- Open-Meteo/Copernicus CAMS air-quality events are modeled regional guidance
+  sampled at a fixed set of global reference cities. They are not local monitor
+  readings and do not provide complete global coverage.
+- GDACS drought records use alert centroids and recently updated episodes;
+  affected areas are much larger than the plotted point.
+- Open-Meteo point conditions do not prove event impact. Air-quality data must
+  be attributed to Open-Meteo and the Copernicus Atmosphere Monitoring Service
+  (CAMS).
 - OpenStreetMap coverage varies by place.
 - ReliefWeb, FIRMS, WorldPop, and detailed road-network ingestion are
   integration points, not claimed as live in the current release.
