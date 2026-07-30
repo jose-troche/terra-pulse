@@ -478,7 +478,7 @@ export default function App() {
               <span className="section-kicker">Living Earth · Real time</span>
               <h1>What is happening<br />on Earth today?</h1>
             </div>
-            <div className="map-legend">
+            <div className="map-legend" role="group" aria-label="Map severity legend">
               <span><i className="legend-critical" /> Critical</span>
               <span><i className="legend-high" /> High</span>
               <span><i className="legend-moderate" /> Moderate</span>

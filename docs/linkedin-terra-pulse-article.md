@@ -4,7 +4,7 @@ Every minute, Earth generates signals: an earthquake is reviewed, a storm warnin
 
 The observations live across different agencies, formats, update cycles, and geographic scopes. A map can plot them, but a map alone cannot explain what they mean, how they relate, or what remains unknown.
 
-That is why I built **Terra Pulse**: a living Earth intelligence dashboard that connects authoritative public data, converts it into a common event model, adds transparent context, and explains why a signal may deserve attention.
+That is why **Terra Pulse** was created: a living Earth intelligence dashboard that connects authoritative public data, converts it into a common event model, adds transparent context, and explains why a signal may deserve attention.
 
 Explore it live: https://terrapulse.troche.workers.dev
 

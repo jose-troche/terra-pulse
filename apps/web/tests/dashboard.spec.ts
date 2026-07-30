@@ -618,6 +618,23 @@ test("keeps the mobile dashboard within the viewport", async ({ page }) => {
   }
 });
 
+test("shows the severity legend in the mobile map", async ({
+  page
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "mobile-chromium",
+    "This regression covers the phone layout."
+  );
+
+  await openDashboard(page);
+  const legend = page.getByRole("group", { name: "Map severity legend" });
+  await expect(legend).toBeVisible();
+  await expect(legend).toBeInViewport();
+  await expect(legend.getByText("Critical", { exact: true })).toBeVisible();
+  await expect(legend.getByText("High", { exact: true })).toBeVisible();
+  await expect(legend.getByText("Moderate", { exact: true })).toBeVisible();
+});
+
 test("renders the event relationship graph in the mobile page flow", async ({
   page
 }, testInfo) => {

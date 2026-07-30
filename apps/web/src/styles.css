@@ -2394,10 +2394,29 @@ a {
     top: 24px;
     right: 22px;
     left: 22px;
+    flex-direction: column;
+    gap: 12px;
   }
 
   .map-title h1 {
     font-size: 37px;
+  }
+
+  .map-legend {
+    display: flex;
+    align-self: flex-start;
+    gap: 11px;
+    padding: 7px 9px;
+    border-color: rgba(216, 239, 228, 0.22);
+    background: rgba(4, 16, 13, 0.82);
+    box-shadow: 0 8px 22px rgba(2, 10, 8, 0.22);
+    color: #d7e7df;
+    font-size: 11px;
+  }
+
+  .map-legend i {
+    width: 7px;
+    height: 7px;
   }
 }
 
