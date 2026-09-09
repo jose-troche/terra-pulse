@@ -57,7 +57,7 @@ flowchart LR
 3. `/api/ask` creates a deterministic answer first. A per-session Durable Object
    gives Workers AI only the structured packet and recent bounded history. If AI
    fails or reaches a platform limit, the deterministic answer is returned.
-4. The 15-minute cron refreshes feeds and persists bounded event snapshots and
+4. The 30-minute cron refreshes feeds and persists bounded event snapshots and
    history. Normal page/API requests do not perform D1 writes.
 
 ## Resilience

@@ -489,7 +489,7 @@ Examples:
 every 5 minutes:
     fetch earthquakes
 
-every 15 minutes:
+every 30 minutes:
     fetch weather alerts
 
 every hour:
