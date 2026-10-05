@@ -75,6 +75,21 @@ npm run db:migrate:remote
 npm run deploy
 ```
 
+### Basemap tiles
+
+The globe uses CARTO's Voyager raster basemap when a CARTO API key is provided
+at build time; CARTO stamps keyless tiles with an "API KEY REQUIRED" watermark.
+Request a free key from CARTO (no account needed), then build or deploy with it
+in the environment or in `apps/web/.env`:
+
+```bash
+VITE_CARTO_API_KEY=your-key npm run deploy
+```
+
+Without a key the globe falls back to the keyless OpenStreetMap standard tiles.
+The key is embedded in the client bundle, which is how CARTO basemap keys are
+meant to be used.
+
 For deployment from a different Cloudflare account, create resources with
 `npx wrangler d1 create terrapulse-db` and
 `npx wrangler kv namespace create terrapulse-cache`, then replace their IDs in

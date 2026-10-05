@@ -32,19 +32,35 @@ interface MapCanvasProps {
   onSelect: (eventId: string) => void;
 }
 
+// CARTO watermarks keyless raster tiles with "API KEY REQUIRED", so its
+// Voyager basemap is only used when a key is supplied at build time.
+// Without one, fall back to the keyless OpenStreetMap standard tiles.
+const cartoApiKey = import.meta.env.VITE_CARTO_API_KEY?.trim();
+const osmAttribution =
+  '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+
+const basemapSource: StyleSpecification["sources"][string] = cartoApiKey
+  ? {
+      type: "raster",
+      tiles: [
+        `https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png?key=${encodeURIComponent(cartoApiKey)}`
+      ],
+      tileSize: 256,
+      attribution: `${osmAttribution} · © <a href="https://carto.com/attributions">CARTO</a>`
+    }
+  : {
+      type: "raster",
+      tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+      tileSize: 256,
+      maxzoom: 19,
+      attribution: osmAttribution
+    };
+
 const mapStyle: StyleSpecification = {
   version: 8,
   projection: { type: "globe" },
   sources: {
-    osm: {
-      type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png"
-      ],
-      tileSize: 256,
-      attribution:
-        '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · © <a href="https://carto.com/attributions">CARTO</a>'
-    }
+    osm: basemapSource
   },
   layers: [
     {
